@@ -18,6 +18,9 @@ def depth_process(img):
     col_median = np.median(im, axis=0)
     row_median = np.median(im, axis=1)
 
+    im_gx = cv2.Sobel(img, cv2.CV_16U, dx=1, dy=0, ksize=5)
+    im_gy = cv2.Sobel(img, cv2.CV_16U, dx=0, dy=1, ksize=5)
+
     plt.figure(1)
     plt.subplot(211)
     plt.plot(col_median)
