@@ -34,7 +34,7 @@ cv2.imwrite(d_filename, im_d)
 #cv2.waitKey(0)
 #np.savetxt('sample_depth_image', im)
 
-p = np.empty((1, 3))
+p = np.empty((640*480, 3))
 for pts in point_cloud2.read_points(clouds, skip_nans=True):
     ptx = pts[0]
     pty = pts[1]
