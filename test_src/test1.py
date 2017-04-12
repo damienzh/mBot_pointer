@@ -28,6 +28,7 @@ timestr = time.strftime("%Y%m%d-%H%M%S")
 
 c_filename = 'color_image'+timestr+'.png'
 d_filename = 'depth_image'+timestr+'.png'
+pc_filename = 'point_cloud'+timestr+'.txt'
 
 cv2.imwrite(c_filename, im_c)
 cv2.imwrite(d_filename, im_d)
@@ -35,8 +36,12 @@ cv2.imwrite(d_filename, im_d)
 #np.savetxt('sample_depth_image', im)
 
 p = np.empty((640*480, 3))
+i = 0
 for pts in point_cloud2.read_points(clouds, skip_nans=True):
-    ptx = pts[0]
-    pty = pts[1]
-    ptz = pts[2]
-    p = np.vstack((p, [ptx, pty, ptz]))
+    p[i, 0] = pts[0]
+    p[i, 1] = pts[1]
+    p[i, 2] = pts[2]
+    i += 1
+
+print(p.dtype)
+np.savetxt(pc_filename, p)

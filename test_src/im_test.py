@@ -42,18 +42,26 @@ def show_depth(img, depth_resolution, xy_resolution):
     y_step = row / xy_resolution
 
 
-def process_colorimage(img):
+def color_process(img):
 
     img_h = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    # img_l = cv2.cvtColor(img, cv2.COLOR_BGR2LUV)
+    # int(img_l.dtype)
     cv2.imshow('color in hsv', img_h)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
+
+def scanline(img, subWindow):
+
+    s = np.mean(img[subWindow], axis=0)
+    return s
+
 if __name__ == '__main__':
-    im_filename = 'Images/depth_image_table3.png'
-    imc_filename = 'Images/color_image_table3.png'
-    im_d = cv2.imread(im_filename, -1)
+    imd_filename = 'test_data/depth_image_dc4_20170408-170421.png'
+    imc_filename = 'test_data/color_image20170408-170543.png'
+    im_d = cv2.imread(imd_filename, -1)
     im_c = cv2.imread(imc_filename, 3)
 
-    depth_process(im_d)
-    #process_colorimage(im_c)
+    # depth_process(im_d)
+    color_process(im_c)
