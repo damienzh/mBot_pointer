@@ -1,0 +1,13 @@
+# global variables
+
+R200_DEPTH_FOV_H = 59  # degree
+R200_DEPTH_FOV_V = 45  # degree
+
+R200_MAX_DISTANCE = 4000
+R200_MIN_DISTANCE = 500
+
+XTION_FOV_H = 45  # degree
+XTION_FOV_V = 58  # degree
+
+XTION_MAX_DISTANCE = 500   # mm
+XTION_MIN_DISTANCE = 4000  # mm

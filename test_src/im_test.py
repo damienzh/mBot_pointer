@@ -1,24 +1,22 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+from config import *
 
-
-MAX_DISTANCE = 4000
-MIN_DISTANCE = 350
 # X_RANGE = slice()
 ROW_RANGE = slice(480/2-60, 480/2+60)
 
 
 def depth_process(img):
 
-    img[img > MAX_DISTANCE] = 0
-    img[img < MIN_DISTANCE] = 0
+    img[img > R200_MAX_DISTANCE] = 0
+    img[img < R200_MIN_DISTANCE] = 0
     # img = img[ROW_RANGE, :]
     img = depth_filter(img, 0)
     im_d = depth_filter(img, 2)
     img_c = depth_filter(img, 5)
-    bins = np.linspace(MIN_DISTANCE, MAX_DISTANCE, 100)
-    hist = cv2.calcHist([img_c], [0], None, [100], [MIN_DISTANCE, MAX_DISTANCE])
+    bins = np.linspace(R200_MIN_DISTANCE, R200_MAX_DISTANCE, 100)
+    hist = cv2.calcHist([img_c], [0], None, [100], [R200_MIN_DISTANCE, R200_MAX_DISTANCE])
     segs = histo_segment(hist, 100)
     hist_g = np.gradient(hist, axis=0)
     print(np.median(hist))
@@ -40,7 +38,7 @@ def depth_thresh(img, low_thresh, high_thresh, convert=False):
     img[img < low_thresh] = 0
     img[img > high_thresh] = 0
     if convert:
-        img = img.astype(np.uint8)
+        img = np.uint8(img)
 
     return img
 
@@ -114,12 +112,16 @@ def remove_ground(d_img, height):
 
 
 if __name__ == '__main__':
-    imd_filename = 'test_data/depth_image_dc4_20170408-170421.png'  # box
-    imd_filename = 'test_data/depth_image_dc4_20170408-171930.png'  # doorway
-    imd_filename = 'test_data/depth_image_dc4_20170408-171342.png'  # table
-    imc_filename = 'test_data/color_image20170408-170543.png'
-    im_d = cv2.imread(imd_filename, -1)
-    im_c = cv2.imread(imc_filename, 3)
+    imd_filename = 'test_data/R200/depth_image_dc4_20170408-170421.png'  # box
+    imd_filename = 'test_data/R200/depth_image_dc4_20170408-171930.png'  # doorway
+    imd_filename = 'test_data/R200/depth_image_dc4_20170408-171342.png'  # table
+    imc_filename = 'test_data/R200/color_image20170408-170543.png'
 
-    depth_process(im_d)
-    color_process(im_c)
+    xtion_depth = ['xtion_depth_image_1.png', 'xtion_depth_image_2.png', 'xtion_depth_image_3.png',
+                   'xtion_depth_image_4.png']
+    xtion_color = ['xtion_color_image_1.png', 'xtion_color_image_2.png', 'xtion_color_image_3.png',
+                   'xtion_color_image_4.png']
+
+    path = 'test_data/xtion/'
+    print path + xtion_depth[0]
+    img1 = cv2.imread(path+xtion_depth[0], -1)
