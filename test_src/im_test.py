@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 from config import *
 
 # X_RANGE = slice()
@@ -111,6 +112,23 @@ def remove_ground(d_img, height):
     return dd
 
 
+def depth2image(img):
+    """convert uint16 depth image to uint8 image"""
+    img_8 = np.uint8(np.float32(img) * 255 / np.max(img))
+    return img_8
+
+
+def imread(file, xtion=True):
+    if os.path.isfile(file):
+        img = cv2.imread(file, -1)
+        if xtion:
+            img = img[:, 0:631]
+    else:
+        raise IOError("File does not exist")
+
+    return img
+
+
 if __name__ == '__main__':
     imd_filename = 'test_data/R200/depth_image_dc4_20170408-170421.png'  # box
     imd_filename = 'test_data/R200/depth_image_dc4_20170408-171930.png'  # doorway
@@ -123,5 +141,16 @@ if __name__ == '__main__':
                    'xtion_color_image_4.png']
 
     path = 'test_data/xtion/'
-    print path + xtion_depth[0]
-    img1 = cv2.imread(path+xtion_depth[0], -1)
+    # print path + xtion_depth[0]
+    # img1 = cv2.imread(path+xtion_depth[0], -1)
+    img2 = imread(path+xtion_depth[1])
+    img2_8 = depth2image(img2)
+    edges2 = cv2.Canny(img2_8, 50, 200)
+    lines2 = cv2.HoughLinesP(edges2, 1, np.pi / 180, 100, minLineLength=100, maxLineGap=10)
+    for line in lines2:
+        x1, y1, x2, y2 = line[0]
+        cv2.line(img2_8, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
+    cv2.imshow('edges', img2_8)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
