@@ -6,7 +6,7 @@ from config import *
 
 # X_RANGE = slice()
 ROW_RANGE = slice(480/2-60, 480/2+60)
-
+COL_RANGW = slice(640/2-60, 640/2+60)
 
 def depth_process(img):
 
@@ -91,9 +91,23 @@ def color_process(img):
     cv2.destroyAllWindows()
 
 
-def scanline(img, subWindow):
+def scanline(img, subWindow, direction=0):
+    """
+    :param img: source image
+    :param subWindow: region of interest
+    :param direction: 'h' or 0, horizontal scanline
+                      'v' or 1, vertical scanline
+    :return: scanline profile
+    """
+    if direction == 'h' or direction == '0':
+        a = 0
+    elif direction == 'v' or direction == '1':
+        a = 1
+    else:
+        a = 0
 
-    s = np.mean(img[subWindow], axis=0)
+    s = np.mean(img[subWindow], a)
+
     return s
 
 

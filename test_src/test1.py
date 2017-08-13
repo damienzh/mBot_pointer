@@ -7,14 +7,14 @@ import time
 from sensor_msgs.msg import PointCloud2
 from sensor_msgs import point_cloud2
 import numpy as np
-import os
+import sys
 
 rospy.init_node('test_node')
-
+# name = sys.argv
 
 dp_im = rospy.wait_for_message('/camera/depth/image_raw', Image)
 c_im = rospy.wait_for_message('/camera/rgb/image_raw', Image)
-# clouds = rospy.wait_for_message('/camera/depth/points', PointCloud2)
+clouds = rospy.wait_for_message('/camera/depth/points', PointCloud2)
 
 b = cv_bridge.CvBridge()
 
@@ -35,13 +35,13 @@ cv2.imwrite(d_filename, im_d)
 #cv2.waitKey(0)
 #np.savetxt('sample_depth_image', im)
 
-# p = np.empty((640*480, 3))
-# i = 0
-# for pts in point_cloud2.read_points(clouds, skip_nans=True):
-#     p[i, 0] = pts[0]
-#     p[i, 1] = pts[1]
-#     p[i, 2] = pts[2]
-#     i += 1
-#
-# print(p.dtype)
-# np.savetxt(pc_filename, p)
+p = np.empty((im_d.shape[0]*im_d.shape[1], 3))
+i = 0
+for pts in point_cloud2.read_points(clouds, skip_nans=True):
+    p[i, 0] = pts[0]
+    p[i, 1] = pts[1]
+    p[i, 2] = pts[2]
+    i += 1
+
+print(p.dtype)
+np.savetxt(pc_filename, p)

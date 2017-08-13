@@ -1,9 +1,19 @@
 <launch>
-	<node pkg="depthimage_to_laserscan" name="depthimage_to_laserscan" type="depthimage_to_laserscan">
+	<node pkg="depthimage_to_laserscan" name="depthimage2laserscan" type="depthimage_to_laserscan">
 		<remap from="image" to="/camera/depth/image_raw"/>
 		<remap from="camera_info" to="/camera/depth/camera_info"/>
 	</node>
 
-	<include file="$(find openni2_launch)/launch/openni2.launch" />
+	<group ns="ranger">
+		<node pkg="rosserial_python" type="serial_node.py" args="/dev/ttyUSB0"
+			name="mbot_ranger">
+		</node>
+	</group>
+
+	<include file="$(find openni2_launch)/launch/openni2.launch" arg="depth_registration" default="true"/>
+		<param name="/camera/driver/depth_mode" value="8" />
+		<param name="/camera/driver/color_mode" value="8" />
+		<param name="/camera/driver/ir_mode" value="8" />
 	
+
 </launch>
