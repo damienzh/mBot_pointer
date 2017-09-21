@@ -1,68 +1,100 @@
 #! /usr/bin/env python
 
 import rospy
-from sensor_msgs.msg import Range
-from std_msgs.msg import Int16
-from geometry_msgs.msg import Twist
+import tf
+from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Imu
-import numpy as np
+from std_msgs.msg import Int16
+from math import pi, atan2, sin, cos
 
-distance_init = 0
-distance_current = 0
-imu_data = np.zeros((1, 6))
-motor_left = []
-motor_right = []
+count2dis = 0.035
+wheelbase = 0.145
 
-def range_callback(msg, vel):
-    global distance_init
+base_frame_id = '/base_link'
+odom_frame_id = 'odom'
 
-    vl = vel[0]
-    vr = vel[1]
 
-    if distance_init == 0:
-        distance_init = msg.range
-        print distance_init
-        rospy.sleep(100)
-        vel_pub_l.publish(vl)
-        vel_pub_r.publish(vr)
+class ImuOdom:
+    def __init__(self):
+        rospy.init_node('imu_odom')
 
-    distance_current = msg.range
+        self.x = 0
+        self.y = 0
+        self.th = 0
+        self.v = 0
+        self.w = 0
 
-    if distance_init - distance_current > 2 or distance_current < 0.3:
-        vel_pub_l.publish(0)
-        vel_pub_r.publish(0)
+        self.now = rospy.Time.now()
+        self.dt = 0
 
-def rpm_cmd(s):
-    pass
+        rospy.Subscriber('encoder_l', Imu, self.imu_callback)
+        self.odom_pub = rospy.Publisher('imu_odom', Odometry, queue_size=5)
 
-def rpm_callback(msg):
-    pass
+    def imu_callback(self,msg):
+        pass
+    def update(self):
+        pass
+    def spin(self):
+        pass
 
-def imu_callback(msg):
-    global imu_data
 
-    buff = np.zeros((1, 6))
-    buff[0] = msg.linear_acceleration.x
-    buff[1] = msg.linear_acceleration.y
-    buff[2] = msg.linear_acceleration.z
-    buff[3] = msg.angular_velocity.x
-    buff[4] = msg.angular_velocity.y
-    buff[5] = msg.angular_velocity.z
+class EncOdom:
+    def __init__(self):
+        rospy.init_node('enc_odom')
 
-    imu_data = np.vstack((imu_data, buff))
+        self.x = 0      # X position in planar ground
+        self.y = 0      # Y position in planar ground
+        self.th = 0     # direction in planar ground
+        self.v = 0      # linear velocity
+        self.w = 0      # angular velocity
 
+        self.now = rospy.Time.now()
+        self.dt = 0
+
+        self.disL = 0
+        self.disR = 0
+        self.timeL = 0
+        self.timeR = 0
+
+        rospy.Subscriber('encoder_l', Int16, self.enc_L_callback)
+        rospy.Subscriber('encoder_r', Int16, self.enc_R_callback)
+        self.odom_pub = rospy.Publisher('enc_odom', Odometry, queue_size=5)
+
+    def enc_L_callback(self,msg):
+        self.disL = msg.data * count2dis
+
+    def enc_R_callback(self,msg):
+        self.disR = msg.data * count2dis
+
+    def update(self):
+        now = rospy.Time.now()
+        if now > self.now:
+            self.dt = now - self.now
+            trv_dis = (self.disL + self.disR) / 2
+            trv_rot = atan2((self.disR - self.disL), wheelbase)
+            self.x = self.x + trv_dis * sin(trv_rot)
+            self.y = self.y + trv_dis * cos(trv_rot)
+            self.th = self.th + trv_rot
+
+        odom_msg = Odometry()
+        odom_msg.header.stamp = now
+        odom_msg.header.frame_id = odom_frame_id
+        odom_msg.child_frame_id = base_frame_id
+        odom_msg.pose.pose.position.x = self.x
+        odom_msg.pose.pose.position.y = self.y
+        odom_msg.pose.pose.orientation = 0
+        odom_msg.twist.twist.linear.x = self.v
+        odom_msg.twist.twist.angular.z = self.w
+
+        self.odom_pub.publish(odom_msg)
+
+    def spin(self):
+        while rospy.is_shutdown():
+            self.update()
 
 if __name__ == '__main__':
-    s_left = input('target left rpm (0~200):')
-    s_right = input('target right rpm (0~200):')
-
-    rospy.init_node('odom_test')
-    vel_pub_l = rospy.Publisher('cmd_vel_l', Int16, queue_size=1)
-    vel_pub_r = rospy.Publisher('cmd_vel_r', Int16, queue_size=1)
-    range_sub = rospy.Subscriber('terarangerone', Range, range_callback, (s_left, s_right))
-    encoder_left_sub = rospy.Subscriber('left_rpm', Int16, rpm_callback)
-    encoder_right_sub = rospy.Subscriber('right_rpm', Int16, rpm_callback)
-    imu_sub = rospy.Subscriber('imu_raw', Imu, imu_callback)
-
-
-    rospy.spin()
+    try:
+        enc_odom = EncOdom()
+        enc_odom.spin()
+    except rospy.ROSInterruptException:
+        pass

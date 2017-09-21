@@ -3,6 +3,7 @@
 import sys, select, tty, termios
 import rospy
 from geometry_msgs.msg import Twist
+from std_msgs.msg import Int16MultiArray
 from sensor_msgs.msg import Range
 
 def callback(msg):

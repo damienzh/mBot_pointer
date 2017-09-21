@@ -66,6 +66,7 @@ def imu_process(msg):
     imu_pub.publish(new_msg)
 
 
+
 if __name__ == '__main__':
     rospy.init_node('imu_process')
     imu_pub = rospy.Publisher('imu_new', Imu, queue_size=1)
