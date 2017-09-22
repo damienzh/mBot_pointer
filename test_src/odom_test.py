@@ -48,7 +48,7 @@ class EncOdom:
         self.v = 0      # linear velocity
         self.w = 0      # angular velocity
 
-        self.now = rospy.Time.now()
+        self.lastTime = rospy.Time.now()
         self.dt = 0
 
         self.disL = 0
@@ -68,12 +68,12 @@ class EncOdom:
 
     def update(self):
         now = rospy.Time.now()
-        if now > self.now:
-            self.dt = now - self.now
+        if now > self.lastTime:
+            self.dt = now - self.lastTime
             trv_dis = (self.disL + self.disR) / 2
             trv_rot = atan2((self.disR - self.disL), wheelbase)
-            self.x = self.x + trv_dis * sin(trv_rot)
-            self.y = self.y + trv_dis * cos(trv_rot)
+            self.x = self.x + trv_dis * sin(trv_rot + self.th)
+            self.y = self.y + trv_dis * cos(trv_rot + self.th)
             self.th = self.th + trv_rot
 
         odom_msg = Odometry()
