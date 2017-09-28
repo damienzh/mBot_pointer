@@ -69,9 +69,11 @@ class EncOdom:
 
     def enc_L_callback(self,msg):
         self.disL = msg.data * count2dis
+        self.new_message = 1
 
     def enc_R_callback(self,msg):
         self.disR = msg.data * count2dis
+        self.new_message = 1
 
     def update(self):
         now = rospy.Time.now()
@@ -111,7 +113,9 @@ class EncOdom:
 
     def spin(self):
         while not rospy.is_shutdown():
-            self.update()
+            if self.new_message:
+                self.update()
+                self.new_message = 0
 
 if __name__ == '__main__':
     try:

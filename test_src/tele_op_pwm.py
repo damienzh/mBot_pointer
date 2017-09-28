@@ -43,6 +43,7 @@ if __name__ == '__main__':
            "  q/e: increase or decrease speed by 10% of full speed\n" \
            "  space: stop\n" \
            "  Esc: exit\n" \
+           "  Default speed 50% full\n"\
            "=======================================================\n"
     print info
     pub_pwm.publish(pwm)

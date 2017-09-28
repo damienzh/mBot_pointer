@@ -4,7 +4,6 @@ import rospy
 from sensor_msgs.msg import Imu
 import tf
 
-
 def callback(msg):
     msg.header.frame_id = 'imu'
     imu_pub.publish(msg)
