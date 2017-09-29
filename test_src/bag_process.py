@@ -126,6 +126,4 @@ class EncData:
 
 
 if __name__ == '__main__':
-    imu1 = ImuData('../rosbag/pwm50.bag')
-    e1 = EncData('../rosbag/pwm50.bag')
-    e1.plotVelocity()
+    pass
