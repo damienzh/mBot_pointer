@@ -7,13 +7,14 @@ from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Quaternion
 from sensor_msgs.msg import Imu
 from std_msgs.msg import Int16
+from mbot_pointer.msg import Encoder
 from math import pi, atan2, sin, cos
 
 count2dis = 0.035
 wheelbase = 0.145
 
 base_frame_id = '/base_link'
-odom_frame_id = 'odom'
+odom_frame_id = '/odom'
 
 
 class ImuOdom:
@@ -33,7 +34,6 @@ class ImuOdom:
         self.odom_pub = rospy.Publisher('imu_odom', Odometry, queue_size=5)
 
     def imu_callback(self,msg):
-        
         pass
 
     def update(self):
@@ -54,31 +54,29 @@ class EncOdom:
         self.v = 0      # linear velocity
         self.w = 0      # angular velocity
 
-        self.lastTime = rospy.Time.now()
         self.dt = 0
 
         self.disL = 0
         self.disR = 0
-        self.timeL = 0
-        self.timeR = 0
+        self.time_cur = 0
+        self.time_last = 0
 
-        rospy.Subscriber('encoder_l', Int16, self.enc_L_callback)
-        rospy.Subscriber('encoder_r', Int16, self.enc_R_callback)
+        self.new_message = False
+        rospy.Subscriber('encoder', Encoder, self.enc_callback)
         self.odom_pub = rospy.Publisher('enc_odom', Odometry, queue_size=5)
         self.odomBroadcaster = TransformBroadcaster()
 
-    def enc_L_callback(self,msg):
-        self.disL = msg.data * count2dis
-        self.new_message = 1
+    def enc_callback(self,msg):
+        self.time_cur = msg.header.stamp.to_sec()
+        self.disL = msg.left * count2dis
+        self.disR = msg.right * count2dis
 
-    def enc_R_callback(self,msg):
-        self.disR = msg.data * count2dis
-        self.new_message = 1
+        self.update()
+
 
     def update(self):
-        now = rospy.Time.now()
-        if now > self.lastTime:
-            self.dt = (now - self.lastTime).to_sec()
+        if self.time_last != 0:
+            self.dt = self.time_cur - self.time_last
             trv_dis = (self.disL + self.disR) / 2
             trv_rot = atan2((self.disR - self.disL), wheelbase)
             self.x = self.x + trv_dis * sin(trv_rot + self.th)
@@ -92,6 +90,7 @@ class EncOdom:
         quaternion.w = cos(self.th / 2)
         quaternion.z = sin(self.th / 2)
 
+        now = rospy.Time.now()
         odom_msg = Odometry()
         odom_msg.header.stamp = now
         odom_msg.header.frame_id = odom_frame_id
@@ -109,17 +108,17 @@ class EncOdom:
                                            base_frame_id,
                                            odom_frame_id)
 
-        self.lastTime = now
+        self.time_last = self.time_cur
 
     def spin(self):
         while not rospy.is_shutdown():
             if self.new_message:
                 self.update()
-                self.new_message = 0
+                self.new_message = False
 
 if __name__ == '__main__':
     try:
         enc_odom = EncOdom()
-        enc_odom.spin()
+        #enc_odom.spin()
     except rospy.ROSInterruptException:
         pass

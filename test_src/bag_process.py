@@ -35,7 +35,6 @@ class ImuData:
         dvx = self.data[1:-1, 1] * dt
         dvy = self.data[1:-1, 2] * dt
 
-
     def getCount(self):
         return self.data.shape[0]
 
@@ -89,15 +88,14 @@ class EncData:
 
         bag = rosbag.Bag(filename)
         '''data = [timestamp, left count, right count]'''
-        self.data_l = np.array([], dtype=np.int8)
-        for msg in bag.read_messages(['/encoder_l']):
-            t = msg.timestamp.to_sec()
-            self.data_l = np.append(self.data_l, [t,msg.message.data])
-        self.data_r = np.array([], dtype=np.int8)
-        for msg in bag.read_messages(['/encoder_r']):
-            self.data_r = np.append(self.data_r, [msg.message.data])
-        self.data = np.hstack((self.data_l.reshape([-1,2]),self.data_r.reshape([-1,1])))
+        self.data = np.array([], dtype=np.int8)
+        for msg in bag.read_messages(['/encoder']):
+            t = msg.message.header.stamp.to_sec()
+            countl = msg.message.left
+            countr = msg.message.right
+            self.data = np.append(self.data, [t, countl, countr])
         bag.close()
+        self.data = self.data.reshape(-1, 3)
 
         self.count = self.data.shape[0]
         self.calcVelocity()

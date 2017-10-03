@@ -28,6 +28,8 @@ class mBotController():
     def velCmdCallback(self, msg):
         self.v_cmd = msg.linear.x
         self.w_cmd = msg.angular.z
+        self.vr_cmd = (2 * self.v_cmd + self.w_cmd * wheelbase) / 2
+        self.vl_cmd = 2 * self.v_cmd - self.vr_cmd
 
     def encCallbackL(self,msg):
         self.v_l =msg.data
