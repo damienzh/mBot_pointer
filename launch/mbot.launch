@@ -4,6 +4,9 @@
 		<remap from="camera_info" to="/camera/depth/camera_info"/>
 	</node>
 
+	<node pkg="mbot_pointer" name="tf" type="static_tf"/>
+	<node pkg="mbot_pointer" name="service" type="service_server"/>
+
 	<group ns="ranger">
 		<node pkg="rosserial_python" type="serial_node.py" args="/dev/ttyUSB0"
 			name="mbot_ranger">

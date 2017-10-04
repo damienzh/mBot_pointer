@@ -3,5 +3,5 @@ float32 angular_z
 
 ---
 
-int16 pwm_left
-int16 pwm_right
+int16 cmd_left
+int16 cmd_right

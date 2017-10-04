@@ -10,8 +10,7 @@ from std_msgs.msg import Int16
 from mbot_pointer.msg import Encoder
 from math import pi, atan2, sin, cos
 
-count2dis = 0.035
-wheelbase = 0.145
+from src.config import count2dis, wheelbase
 
 base_frame_id = '/base_link'
 odom_frame_id = '/odom'
@@ -86,27 +85,27 @@ class EncOdom:
             self.v = trv_dis / self.dt
             self.w = trv_rot / self.dt
 
-        quaternion = Quaternion()
-        quaternion.w = cos(self.th / 2)
-        quaternion.z = sin(self.th / 2)
+            quaternion = Quaternion()
+            quaternion.w = cos(self.th / 2)
+            quaternion.z = sin(self.th / 2)
 
-        now = rospy.Time.now()
-        odom_msg = Odometry()
-        odom_msg.header.stamp = now
-        odom_msg.header.frame_id = odom_frame_id
-        odom_msg.child_frame_id = base_frame_id
-        odom_msg.pose.pose.position.x = self.x
-        odom_msg.pose.pose.position.y = self.y
-        odom_msg.pose.pose.orientation = quaternion
-        odom_msg.twist.twist.linear.x = self.v
-        odom_msg.twist.twist.angular.z = self.w
+            now = rospy.Time.now()
+            odom_msg = Odometry()
+            odom_msg.header.stamp = now
+            odom_msg.header.frame_id = odom_frame_id
+            odom_msg.child_frame_id = base_frame_id
+            odom_msg.pose.pose.position.x = self.x
+            odom_msg.pose.pose.position.y = self.y
+            odom_msg.pose.pose.orientation = quaternion
+            odom_msg.twist.twist.linear.x = self.v
+            odom_msg.twist.twist.angular.z = self.w
 
-        self.odom_pub.publish(odom_msg)
-        self.odomBroadcaster.sendTransform((self.x, self.y, 0),
-                                           quaternion_from_euler(0, 0, self.th),
-                                           now,
-                                           base_frame_id,
-                                           odom_frame_id)
+            self.odom_pub.publish(odom_msg)
+            self.odomBroadcaster.sendTransform((self.x, self.y, 0),
+                                               quaternion_from_euler(0, 0, self.th),
+                                               now,
+                                               base_frame_id,
+                                               odom_frame_id)
 
         self.time_last = self.time_cur
 

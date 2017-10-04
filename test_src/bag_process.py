@@ -4,9 +4,7 @@ import os
 import rosbag
 import numpy as np
 import matplotlib.pyplot as plt
-
-count2dis = 0.00035
-wheelbase = 0.145
+from src.config import count2dis, wheelbase
 
 
 class ImuData:
@@ -100,6 +98,7 @@ class EncData:
         self.count = self.data.shape[0]
         self.calcVelocity()
         self.calcDistance()
+        self.calcRotation()
 
     def calcVelocity(self):
         self.dt = np.diff(self.data[:,0], axis=0)
@@ -122,6 +121,11 @@ class EncData:
         plt.plot(self.velocity[:,1])
         plt.title('Angular Velocity')
 
+    def calcRotation(self):
+        self.rotation = np.arctan2((self.data[:, 2]-self.data[:, 1])*count2dis, wheelbase)
+        self.angle = np.sum(self.rotation)
 
 if __name__ == '__main__':
+    f = '../rosbag/encoder.bag'
+    e = EncData(f)
     pass

@@ -17,6 +17,9 @@ MBOT_WIDTH = 175 - 30   # total width - one track width
 MBOT_LENGTH = 200
 MBOT_WHEEL_DISTANCE = 120
 
+count2dis = 0.000353
+wheelbase = 0.145
+
 # imd_filename = 'test_data/R200/depth_image_dc4_20170408-170421.png'  # box
 # imd_filename = 'test_data/R200/depth_image_dc4_20170408-171930.png'  # doorway
 # imd_filename = 'test_data/R200/depth_image_dc4_20170408-171342.png'  # table

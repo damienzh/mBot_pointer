@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-from config import *
+from src.config import *
 
 # X_RANGE = slice()
 ROW_RANGE = slice(480/2-60, 480/2+60)
