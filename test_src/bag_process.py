@@ -6,14 +6,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 from src.config import count2dis, wheelbase
 
+bag_path = '/home/k/catkin_ws/src/mbot_pointer/rosbag/'
 
 class ImuData:
     def __init__(self, filename):
-        _, tail = os.path.split(filename)
-        self.name = tail.split('.')[0]
+        f = bag_path + filename
+        self.name = filename.split('.')[0]
 
-        bag = rosbag.Bag(filename)
+        bag = rosbag.Bag(f)
         self.data = np.array([])
+        self.topics = bag.get_type_and_topic_info()[1].keys()
         for msg in bag.read_messages(['/imu_raw']):
             t = msg.message.header.stamp.to_sec()
             acX = msg.message.linear_acceleration.x
@@ -32,6 +34,12 @@ class ImuData:
         dt = np.diff(self.data[:, 0], axis=0)
         dvx = self.data[1:-1, 1] * dt
         dvy = self.data[1:-1, 2] * dt
+
+    def calcRotation(self):
+        dt = np.diff(self.data[:, 0])
+        self.rotation = self.data[1:,6] * dt
+        self.angle_rad = np.sum(self.rotation)
+        self.angle_deg = self.angle_rad * 180 / 3.1415926
 
     def getCount(self):
         return self.data.shape[0]
@@ -78,14 +86,24 @@ class ImuData:
         plt.plot(self.data[:, 6])
         plt.title('Gyro Z')
 
+    def calcCovariance(self):
+        d = self.data[:, 1:]
+        acc = d[:, 0:3]
+        gy = d[:, 3:6]
+        self.acc_cov = np.cov(acc.transpose())
+        self.gy_cov = np.cov(gy.transpose())
+
+        return np.cov(d.transpose())
+
 
 class EncData:
     def __init__(self, filename):
-        _, tail = os.path.split(filename)
-        self.name = tail.split('.')[0]
+        self.path = bag_path + filename
+        self.name = filename.split('.')[0]
 
-        bag = rosbag.Bag(filename)
+        bag = rosbag.Bag(self.path)
         '''data = [timestamp, left count, right count]'''
+        self.topics = bag.get_type_and_topic_info()[1].keys()
         self.data = np.array([], dtype=np.int8)
         for msg in bag.read_messages(['/encoder']):
             t = msg.message.header.stamp.to_sec()
@@ -109,7 +127,8 @@ class EncData:
         self.velocity = np.vstack((linear, angular)).transpose()
 
     def calcDistance(self):
-        self.distance = np.sum(self.data[:,1:], axis=0) * count2dis / 2
+        self.distance = np.sum(self.data[:,1:], axis=0) * count2dis
+        self.distance_total = np.sum(self.distance) / 2
 
     def plotVelocity(self):
         plt.figure()
@@ -123,7 +142,44 @@ class EncData:
 
     def calcRotation(self):
         self.rotation = np.arctan2((self.data[:, 2]-self.data[:, 1])*count2dis, wheelbase)
-        self.angle = np.sum(self.rotation)
+        self.angle_rad = np.sum(self.rotation)
+        self.angle_deg = self.angle_rad * 180 / 3.1415926
+
+    def debug_rpm(self):
+        bag = rosbag.Bag(self.path)
+        self.rpm_data = np.array([], dtype=np.int16)
+        for msg in bag.read_messages(['/motor_rpm']):
+            t = msg.message.header.stamp.to_sec()
+            rpm_l = msg.message.left
+            rpm_r = -msg.message.right
+            self.rpm_data = np.append(self.rpm_data, [t, rpm_l, rpm_r])
+        bag.close()
+        self.rpm_data = self.rpm_data.reshape(-1, 3)
+        self.rpm_count_l = self.data[1:, 1] * (60/self.dt) / 360
+        self.rpm_count_r = self.data[1:, 2] * (60/self.dt) / 360
+
+        plt.figure()
+        plt.subplot(211)
+        plt.plot(self.rpm_data[1:, 1])
+        plt.plot(self.rpm_count_l)
+        plt.plot((self.rpm_count_l - self.rpm_data[1:, 1]))
+        plt.legend(['rpm_l', 'count_l', 'diff'])
+        plt.subplot(212)
+        plt.plot(self.rpm_data[1:, 2])
+        plt.plot(self.rpm_count_r)
+        plt.plot(self.rpm_count_r - self.rpm_data[1:, 2])
+        plt.legend(['rpm_r', 'count_r', 'diff'])
+
+    def load_rpm_cmd(self):
+        bag = rosbag.Bag(self.path)
+        self.cmd_rpm = np.array([])
+        for msg in bag.read_messages(['/cmd_vel_rpm']):
+            t = msg.message.header.stamp.to_sec()
+            cmd_l = msg.message.left
+            cmd_r = msg.message.right
+            self.cmd_rpm = np.append(self.cmd_rpm, [t, cmd_l, cmd_r])
+        bag.close()
+        self.cmd_rpm = self.cmd_rpm.reshape(-1, 3)
 
 if __name__ == '__main__':
     f = '../rosbag/encoder.bag'

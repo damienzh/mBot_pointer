@@ -142,6 +142,9 @@ def imread(file, xtion=True):
 
     return img
 
+def plot_image(file):
+    im = plt.imread(file)
+    plt.imshow(im)
 
 if __name__ == '__main__':
     imd_filename = 'test_data/R200/depth_image_dc4_20170408-170421.png'  # box

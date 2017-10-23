@@ -1,0 +1,35 @@
+<launch>
+    <node pkg="gmapping" name="gmapping" type="slam_gmapping">
+        <remap from="scan" to="/xtion/scan"/>
+
+        <param name="base_frame" value="base_link"/>
+        <param name="map_frame" value="map"/>
+        <param name="odom_frame" value="odom"/>
+
+        <param name="map_update_interval" value="5.0"/><!-- second -->
+        <param name="lstep" value="0.05"/><!-- optimization step in translation-->
+        <param name="astep" value="0.05"/><!-- optimization step in rotation-->
+        <param name="iterations" value="5"/><!-- number of iteration of scanmatcher-->
+        <param name="lsigma" value="0.075"/><!-- the sigma of beam used for likelihood computation-->
+        <param name="lskip" value="0"/><!-- number of beam to skip in each scan-->
+        <param name="linearUpdate" value="1.0"/><!-- process a scan each time the robot translate this far-->
+        <param name="angularUpdate" value="0.5"/><!-- process a scan each time the robot rotate this far-->
+        <param name="particles" value="30"/><!-- number of particles in the filter-->
+
+        <param name="xmin" value="-100.0"/>
+        <param name="ymin" value="-100.0"/>
+        <param name="xmax" value="100.0"/>
+        <param name="ymax" value="100.0"/>
+        <param name="delta" value="0.05"/><!-- map resolution-->
+
+        <!-- threshold on gmapping's occupancy values. greater occupancy considered occupied-->
+        <param name="occ_thresh" value="0.25"/>
+
+        <param name="llsamplerange" value="0.01"/>
+        <param name="llsamplestep" value="0.01"/>
+        <param name="lasamplerange" value="0.005"/>
+        <param name="lasamplestep" value="0.005"/>
+
+        <param name="transform_publish_period" value="0.05"/>
+    </node>
+</launch>

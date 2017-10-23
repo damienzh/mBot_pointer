@@ -1,22 +1,11 @@
 <launch>
-	<node pkg="depthimage_to_laserscan" name="depthimage2laserscan" type="depthimage_to_laserscan">
-		<remap from="image" to="/camera/depth/image_raw"/>
-		<remap from="camera_info" to="/camera/depth/camera_info"/>
-	</node>
-
-	<node pkg="mbot_pointer" name="tf" type="static_tf"/>
-	<node pkg="mbot_pointer" name="service" type="service_server"/>
+	<include file="$(find mbot_pointer)/launch/inlcude/mbot_services.launch"/>
+	<include file="$(find mbot_pointer)/launch/include/xtion_launch.launch"/>
 
 	<group ns="ranger">
 		<node pkg="rosserial_python" type="serial_node.py" args="/dev/ttyUSB0"
 			name="mbot_ranger">
 		</node>
 	</group>
-
-	<!--<include file="$(find openni2_launch)/launch/openni2.launch" arg="depth_registration" default="true"/>-->
-		<!--<param name="/camera/driver/depth_mode" value="8" />-->
-		<!--<param name="/camera/driver/color_mode" value="8" />-->
-		<!--<param name="/camera/driver/ir_mode" value="8" />-->
-	 <include file="$(find mbot_pointer)/launch/xtion_launch.launch"/>
 
 </launch>

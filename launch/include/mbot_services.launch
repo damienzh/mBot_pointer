@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="mbot_pointer" name="tf" type="static_tf.py"/>
+	<node pkg="mbot_pointer" name="service" type="service_server.py"/>
+</launch>
