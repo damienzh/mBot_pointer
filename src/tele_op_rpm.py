@@ -19,12 +19,12 @@ def vel2rpm(cmd, vel):
 
     return p
 
-V = 90
-KEY_MAP_M = {'w':[1, 1], 's':[-1, -1], 'a':[0, 1], 'd':[1, 0], ' ':[0, 0]}
+V = 60
+KEY_MAP_M = {'w':[1, 1], 's':[-1, -1], 'a':[-1, 1], 'd':[1, -1], ' ':[0, 0]}
 KEY_MAP_V = {'q':10, 'e':-10}
 
 if __name__ == '__main__':
-    rospy.init_node('tele_op', anonymous=True)
+    rospy.init_node('tele_op_rpm')
 
     pub_rpm = rospy.Publisher('cmd_vel_rpm', Int16MultiArray, queue_size=1)
     # init rpm value
@@ -37,7 +37,7 @@ if __name__ == '__main__':
            "  q/e: increase or decrease speed by 10 rpm\n" \
            "  space: stop\n" \
            "  Esc: exit\n" \
-           "  Default speed 90 rpm\n"\
+           "  Default speed 60 rpm\n"\
            "=======================================================\n"
     print info
     pub_rpm.publish(rpm)

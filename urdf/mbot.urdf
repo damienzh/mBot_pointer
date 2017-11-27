@@ -3,12 +3,75 @@
 	<link name = "base_link">
 		<visual>
 			<geometry>
-				<box size = "0.2 0.1 0.1">
+				<box size = "0.2 0.1 0.1"/>
 			</geometry>
-			<material name ="silver">
-				<color rgba = "0.75 0.75 0.75 1"/>
+			<material name ="blue">
+				<color rgba = "0 0 1 1"/>
 			</material>
 		</visual>
 	</link>
-
+	<link name="wheel1">
+		<visual>
+			<geometry>
+				<cylinder length="0.03" radius="0.0245"/>
+			</geometry>
+			<origin rpy="1.57075 0 0" xyz="0.1 0.065 -0.04"/>
+			<material name="black">
+				<color rgba="0 0 0 1"/>
+			</material>
+		</visual>
+	</link>
+	<link name="wheel2">
+		<visual>
+			<geometry>
+				<cylinder length="0.03" radius="0.0245"/>
+			</geometry>
+			<origin rpy="1.57075 0 0" xyz="-0.1 0.065 -0.04"/>
+			<material name="black">
+				<color rgba="0 0 0 1"/>
+			</material>
+		</visual>
+	</link>
+	<link name="wheel3">
+		<visual>
+			<geometry>
+				<cylinder length="0.03" radius="0.0245"/>
+			</geometry>
+			<origin rpy="1.57075 0 0" xyz="0.1 -0.065 -0.04"/>
+			<material name="black">
+				<color rgba="0 0 0 1"/>
+			</material>
+		</visual>
+	</link>
+	<link name="wheel4">
+		<visual>
+			<geometry>
+				<cylinder length="0.03" radius="0.0245"/>
+			</geometry>
+			<origin rpy="1.57075 0 0" xyz="-0.1 -0.065 -0.04"/>
+			<material name="black">
+				<color rgba="0 0 0 1"/>
+			</material>
+		</visual>
+	</link>
+	<joint name="base_to_wheel1" type="fixed">
+		<parent link="base_link"/>
+		<child link="wheel1"/>
+		<origin xyz="0 0 0"/>
+	</joint>
+	<joint name="base_to_wheel2" type="fixed">
+		<parent link="base_link"/>
+		<child link="wheel2"/>
+		<origin xyz="0 0 0"/>
+	</joint>
+	<joint name="base_to_wheel3" type="fixed">
+		<parent link="base_link"/>
+		<child link="wheel3"/>
+		<origin xyz="0 0 0"/>
+	</joint>
+	<joint name="base_to_wheel4" type="fixed">
+		<parent link="base_link"/>
+		<child link="wheel4"/>
+		<origin xyz="0 0 0"/>
+	</joint>
 </robot>

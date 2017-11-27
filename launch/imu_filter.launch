@@ -1,0 +1,9 @@
+<launch>
+	<node pkg="imu_filter_madgwick" name="imu_filter" type="imu_filter_node" >
+		<remap from="imu/data_raw" to="/imu_raw"/>
+		<param name="do_bias_estimation" value="true"/>
+		<param name="do_adaptive_gain" value="true" />
+		<param name="publish_debug_topics" value="true" />
+		<param name="use_mag" value="false" />
+	</node>
+</launch>

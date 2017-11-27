@@ -1,19 +1,30 @@
 #! /usr/bin/env python
 
 import rospy
+import tf
 import cv2, cv_bridge
-import std_msgs
-from sensor_msgs.msg import Image
-
+from sensor_msgs.msg import Image, PointCloud2
+from sensor_msgs import point_cloud2
+from std_srvs.srv import Empty
+import numpy as np
 
 class Identifier:
-    def __init__(self):
-        self.bridge = cv_bridge.CvBridge()
-        self.img_color = rospy.Subscriber('/camera/color/image_raw', Image, self.color_callback)
-        self.img_depth = rospy.Subscriber('/camera/depth/image_raw', Image, self.depth_callback)
+    def __init__(self, rgb=None, depth=None, pcl=None):
+        '''rgb, depth are cv image
+            pcl is numpy array'''
+        self.color_img = rgb
+        self.depth_img = depth
+        self.pcl = pcl
 
-    def color_callback(self, msg):
-        image_color = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+    def in_sight(self):
 
-    def depth_callback(self, msg):
-        depth_data = self.bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
+        pass
+
+def getTarget():
+    pass
+
+
+if __name__ == '__main__':
+    rospy.init_node('identifier')
+    rospy.Service('getTarget', Empty, getTarget)
+    rospy.spin()

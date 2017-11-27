@@ -18,7 +18,7 @@ MBOT_LENGTH = 200
 MBOT_WHEEL_DISTANCE = 120
 
 count2dis = 0.000355
-wheelbase = 0.145
+wheelbase = 0.175
 
 # imd_filename = 'test_data/R200/depth_image_dc4_20170408-170421.png'  # box
 # imd_filename = 'test_data/R200/depth_image_dc4_20170408-171930.png'  # doorway

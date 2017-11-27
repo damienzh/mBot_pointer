@@ -6,6 +6,8 @@ import cv2, cv_bridge
 import time
 from sensor_msgs.msg import PointCloud2
 from sensor_msgs import point_cloud2
+import tf
+import tf2_ros, tf2_sensor_msgs
 import numpy as np
 import sys
 
@@ -35,13 +37,13 @@ cv2.imwrite(d_filename, im_d)
 #cv2.waitKey(0)
 #np.savetxt('sample_depth_image', im)
 
-p = np.empty((im_d.shape[0]*im_d.shape[1], 3))
-i = 0
-for pts in point_cloud2.read_points(clouds, skip_nans=True):
-    p[i, 0] = pts[0]
-    p[i, 1] = pts[1]
-    p[i, 2] = pts[2]
-    i += 1
+tf_buffer = tf2_ros.Buffer()
+tf_l = tf2_ros.TransformListener(tf_buffer)
 
+p = np.array([])
+for pts in point_cloud2.read_points(clouds, skip_nans=False):
+    p = np.append(p, pts[0:3])
+p = p.reshape(-1, 3)
+'''point cloud frame is optical frame, z represent depth, x right, y down'''
 print(p.dtype)
 np.savetxt(pc_filename, p)

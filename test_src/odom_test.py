@@ -10,7 +10,7 @@ from std_msgs.msg import Int16
 from mbot_pointer.msg import Encoder
 from math import pi, atan2, sin, cos
 
-from src.config import count2dis, wheelbase
+from config import count2dis, wheelbase
 
 base_frame_id = '/base_link'
 odom_frame_id = '/odom'
@@ -45,8 +45,6 @@ class ImuOdom:
 
 class EncOdom:
     def __init__(self):
-        rospy.init_node('enc_odom')
-
         self.x = 0      # X position in planar ground
         self.y = 0      # Y position in planar ground
         self.th = 0     # direction in planar ground
@@ -78,9 +76,10 @@ class EncOdom:
             self.dt = self.time_cur - self.time_last
             trv_dis = (self.disL + self.disR) / 2
             trv_rot = atan2((self.disR - self.disL), wheelbase)
-            self.x = self.x + trv_dis * sin(trv_rot + self.th)
-            self.y = self.y + trv_dis * cos(trv_rot + self.th)
             self.th = self.th + trv_rot
+            self.x = self.x + trv_dis * cos(self.th)
+            self.y = self.y + trv_dis * sin(self.th)
+
 
             self.v = trv_dis / self.dt
             self.w = trv_rot / self.dt
@@ -109,15 +108,11 @@ class EncOdom:
 
         self.time_last = self.time_cur
 
-    def spin(self):
-        while not rospy.is_shutdown():
-            if self.new_message:
-                self.update()
-                self.new_message = False
 
 if __name__ == '__main__':
+    rospy.init_node('odom_test')
     try:
         enc_odom = EncOdom()
-        #enc_odom.spin()
     except rospy.ROSInterruptException:
         pass
+    rospy.spin()

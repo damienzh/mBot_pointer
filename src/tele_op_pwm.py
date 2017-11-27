@@ -1,16 +1,16 @@
 #! /usr/bin/env python
 
 import rospy
-import sys, select, tty, termios
+from helper import get_key
 from std_msgs.msg import Int16MultiArray
 
-def get_key():
-    orig_settings = termios.tcgetattr(sys.stdin)
-    tty.setraw(sys.stdin)
-    select.select([sys.stdin], [], [], 0)
-    x = sys.stdin.read(1)
-    termios.tcsetattr(sys.stdin, termios.TCSADRAIN, orig_settings)
-    return x
+# def get_key():
+#     orig_settings = termios.tcgetattr(sys.stdin)
+#     tty.setraw(sys.stdin)
+#     select.select([sys.stdin], [], [], 0)
+#     x = sys.stdin.read(1)
+#     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, orig_settings)
+#     return x
 
 
 def vel2pwm(cmd, vel):
@@ -26,11 +26,11 @@ def vel2pwm(cmd, vel):
     return p
 
 V = 50
-KEY_MAP_M = {'w':[1, 1], 's':[-1, -1], 'a':[0, 1], 'd':[1, 0], ' ':[0, 0]}
+KEY_MAP_M = {'w':[1, 1], 's':[-1, -1], 'a':[-1, 1], 'd':[1, -1], ' ':[0, 0]}
 KEY_MAP_V = {'q':10, 'e':-10}
 
 if __name__ == '__main__':
-    rospy.init_node('tele_op', anonymous=True)
+    rospy.init_node('tele_op_pwm')
 
     pub_pwm = rospy.Publisher('cmd_vel_pwm', Int16MultiArray, queue_size=1)
     # init pwm value

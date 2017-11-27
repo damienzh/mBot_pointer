@@ -49,42 +49,66 @@ class ImuData:
         plt.subplot(311)
         plt.plot(self.data[:,1])
         plt.title('Acc X')
+        plt.xlabel('Samples')
+        plt.ylabel('m/s^2')
 
         plt.subplot(312)
         plt.plot(self.data[:,2])
         plt.title('Acc Y')
+        plt.xlabel('Samples')
+        plt.ylabel('m/s^2')
 
         plt.subplot(313)
         plt.plot(self.data[:,3])
         plt.title('Acc Z')
+        plt.xlabel('Samples')
+        plt.ylabel('m/s^2')
+
+        plt.tight_layout()
 
     def plotGyro(self):
         plt.figure()
         plt.subplot(311)
         plt.plot(self.data[:,4])
         plt.title('Gyro X')
+        plt.xlabel('Samples')
+        plt.ylabel('rad/s')
 
         plt.subplot(312)
         plt.plot(self.data[:,5])
         plt.title('Gyro Y')
+        plt.xlabel('Samples')
+        plt.ylabel('rad/s')
 
         plt.subplot(313)
         plt.plot(self.data[:,6])
         plt.title('Gyro Z')
+        plt.xlabel('Samples')
+        plt.ylabel('rad/s')
+
+        plt.tight_layout()
 
     def plotPlanar(self):
         plt.figure()
         plt.subplot(311)
         plt.plot(self.data[:, 1])
         plt.title('Acc X')
+        plt.xlabel('Samples')
+        plt.ylabel('m/s^2')
 
         plt.subplot(312)
         plt.plot(self.data[:, 2])
         plt.title('Acc Y')
+        plt.xlabel('Samples')
+        plt.ylabel('m/s^2')
 
         plt.subplot(313)
         plt.plot(self.data[:, 6])
         plt.title('Gyro Z')
+        plt.xlabel('Samples')
+        plt.ylabel('rad/s')
+
+        plt.tight_layout()
 
     def calcCovariance(self):
         d = self.data[:, 1:]
@@ -180,6 +204,35 @@ class EncData:
             self.cmd_rpm = np.append(self.cmd_rpm, [t, cmd_l, cmd_r])
         bag.close()
         self.cmd_rpm = self.cmd_rpm.reshape(-1, 3)
+
+class OdomData:
+    def __init__(self, filename):
+        self.path = bag_path + filename
+        self.name = filename.split('.')[0]
+
+        bag = rosbag.Bag(self.path)
+        self.poses = np.array([])
+        self.vel = np.array([])
+        topics = bag.get_type_and_topic_info()[1].keys()
+        topic_name = filter(lambda t: 'odom' in t, topics)
+        for msg in bag.read_messages(topic_name):
+            t = msg.message.header.stamp.to_sec()
+            x = msg.message.pose.pose.position.x
+            y = msg.message.pose.pose.position.y
+            vx = msg.message.twist.twist.linear.x
+            vy = msg.message.twist.twist.linear.y
+            w = msg.message.twist.twist.angular.z
+            self.poses = np.append(self.poses, [t, x, y])
+            self.vel = np.append(self.vel, [t, vx, vy, w])
+        bag.close()
+        self.poses = self.poses.reshape(-1, 3)
+        self.vel = self.vel.reshape(-1, 4)
+
+    def plotOdom(self):
+        x_limit = round(max(self.poses[:,1]))
+        plt.figure()
+        plt.plot(self.poses[:,1], self.poses[:,2])
+        plt.ylim(-3,3)
 
 if __name__ == '__main__':
     f = '../rosbag/encoder.bag'
