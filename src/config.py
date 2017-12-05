@@ -20,6 +20,9 @@ MBOT_WHEEL_DISTANCE = 120
 count2dis = 0.000355
 wheelbase = 0.175
 
+SERVO_0 = 0     # degree
+SERVO_90 = 65   # degree
+SERVO_180 = 140 # degree
 # imd_filename = 'test_data/R200/depth_image_dc4_20170408-170421.png'  # box
 # imd_filename = 'test_data/R200/depth_image_dc4_20170408-171930.png'  # doorway
 # imd_filename = 'test_data/R200/depth_image_dc4_20170408-171342.png'  # table

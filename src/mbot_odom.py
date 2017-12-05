@@ -46,7 +46,7 @@ class mBotOdom:
         self.kalman_p = 0
         self.kalman_k = 0
         self.kalman_q = 0.05**2 + 3.1491719118731052e-06
-        self.kalman_r = 3.1491719118731052e-06
+        self.kalman_r = 0.0001 #3.1491719118731052e-06
         self.kalman_h = 1.0
 
         self.odom_frame_id = 'odom'
@@ -148,8 +148,9 @@ class mBotOdom:
         p = self.kalman_p + self.kalman_q
         '''update'''
         self.kalman_k = p * self.kalman_h / (p * self.kalman_h**2 + self.kalman_r)
-        self.theta = self.theta + self.kalman_k * (z - self.kalman_h * theta)
+        self.theta = theta + self.kalman_k * (z - self.kalman_h * theta)
         self.kalman_p = (1 - self.kalman_p*self.kalman_h) * p
+        print 'Kalman K', self.kalman_k, 'Kalman P', self.kalman_p
 
     def reset_odom(self, req):
         rospy.loginfo('reset odom')

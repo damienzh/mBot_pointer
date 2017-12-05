@@ -24,8 +24,8 @@ class mBotController():
         '''init callback data'''
         self.v_cmd = 0
         self.w_cmd = 0
-        self.v_l = 0
-        self.v_r = 0
+        self.rpm_l = 0
+        self.rpm_r = 0
         self.linear_v = 0
         self.angular_w = 0
 
@@ -59,10 +59,12 @@ class mBotController():
         self.angular_i = 0
         self.angular_d = 0
 
-        self.left_controller = pid(self.left_p, self.left_i, self.left_d)
-        self.right_controller = pid(self.right_p, self.right_i, self.right_d)
-        self.linear_controller = pid(self.linear_p, self.linear_i, self.linear_d)
-        self.angular_controller = pid(self.angular_p, self.angular_i, self.angular_d)
+        self.left_controller = pid()
+        self.left_controller.set_limit(255, -255)
+        self.right_controller = pid()
+        self.right_controller.set_limit(255, -255)
+        self.linear_controller = pid()
+        self.angular_controller = pid()
 
     def dyna_callback(self, config, level):
         self.left_p = config['pid_left_p']
@@ -80,11 +82,12 @@ class mBotController():
         self.max_v = config['max_linear_speed']
         self.max_w = config['max_angular_speed']
 
-        self.left_controller.update_param(self.left_p, self.left_i, self.left_d)
-        self.right_controller.update_param(self.right_p, self.right_i, self.right_d)
-        self.linear_controller.update_param(self.linear_p, self.linear_i, self.linear_d)
-        self.angular_controller.update_param(self.angular_p, self.angular_i, self.angular_d)
-
+        self.left_controller.set_params(self.left_p, self.left_i, self.left_d)
+        self.right_controller.set_params(self.right_p, self.right_i, self.right_d)
+        self.linear_controller.set_params(self.linear_p, self.linear_i, self.linear_d)
+        self.angular_controller.set_params(self.angular_p, self.angular_i, self.angular_d)
+        self.linear_controller.set_limit(self.max_v, -self.max_v)
+        self.angular_controller.set_limit(self.max_w, -self.max_w)
         return config
 
     def velCmdCallback(self, msg):
@@ -100,6 +103,8 @@ class mBotController():
         elif self.w_cmd < -self.max_w:
             self.w_cmd = -self.max_w
 
+        self.vl_cmd, self.vr_cmd = self.u_to_cmd(self.v_cmd, self.w_cmd)
+
         rospy.loginfo('linear command velocity %0.2f', self.v_cmd)
         rospy.loginfo('angular command velocity %0.2f', self.w_cmd)
 
@@ -108,8 +113,8 @@ class mBotController():
         self.count_r = msg.right
 
     def rpmcallback(self, msg):
-        self.v_l = self.rpm2vel(msg.left)
-        self.v_r = self.rpm2vel(msg.right)
+        self.rpm_l = msg.left
+        self.rpm_r = msg.right
         #self.rpm_msg_now = msg.header.stamp.to_sec()
         #self.dt = self.rpm_msg_now - self.rpm_msg_then
         #self.update()
@@ -124,13 +129,13 @@ class mBotController():
         uw = self.angular_control()
         (cmd_l, cmd_r) = self.u_to_cmd(uv, uw)
         self.motor_control(cmd_l, cmd_r)
-        rospy.loginfo('desire speed for motor %d, %d', cmd_l, cmd_r)
+        rospy.loginfo('desire speed for motor %d, %d, %0.2f, %0.2f', cmd_l, cmd_r, self.v_cmd, self.w_cmd)
         self.msg_then = deepcopy(self.msg_now)
 
     def update(self):
         if self.pwm_control:
-            ul = self.left_controller.update(self.vl_cmd, self.v_l, self.dt)
-            ur = self.right_controller.update(self.vr_cmd, self.v_r, self.dt)
+            ul = self.left_controller.update(self.vl_cmd, self.v_l)
+            ur = self.right_controller.update(self.vr_cmd, self.v_r)
             u = Int16MultiArray()
             u.data = [self.pwm(ul), self.pwm(ur)]
             self.pwm_pub.publish(u)
@@ -150,10 +155,12 @@ class mBotController():
     def motor_control(self, left_cmd, right_cmd):
         rpm_cmd_left = self.vel2rpm(left_cmd)
         rpm_cmd_right = self.vel2rpm(right_cmd)
-        ul_motor = self.left_controller.update(rpm_cmd_left, self.v_l)
-        ur_motor = self.right_controller.update(rpm_cmd_right, self.v_r)
+        ul_motor = self.left_controller.update(rpm_cmd_left, self.rpm_l)
+        ur_motor = self.right_controller.update(rpm_cmd_right, self.rpm_r)
+        rospy.loginfo('motor I/O: left %d %d right: %d %d',
+                      rpm_cmd_left, self.rpm_l, rpm_cmd_right, self.rpm_r)
         u = Int16MultiArray()
-        u.data = [self.pwm(ul_motor), self.pwm(ur_motor)]
+        u.data = [ul_motor, ur_motor]
         self.pwm_pub.publish(u)
 
     def u_to_cmd(self, uv, uw):
@@ -161,7 +168,6 @@ class mBotController():
         y = inv(A)*u'''
         yl = uv - 0.0835*uw
         yr = uv + 0.0835*uw
-
         return (yl, yr)
 
     def rpm2vel(self, rpm):
@@ -174,13 +180,6 @@ class mBotController():
         rpm = (vel * 60 / count2dis) / 360
         return int(rpm)
 
-    def pwm(self, c):
-        i = int(c)
-        if i > 255:
-            i = 255
-        elif i < -255:
-            i = -255
-        return i
 
 
 if __name__ == '__main__':

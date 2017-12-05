@@ -1,8 +1,10 @@
 #! /usr/bin/env python
 
 import rospy
-from helper import get_key
 from std_msgs.msg import Int16MultiArray
+
+from include.helper import get_key
+
 
 # def get_key():
 #     orig_settings = termios.tcgetattr(sys.stdin)

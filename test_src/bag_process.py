@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import os
+from copy import deepcopy
 import rosbag
 import numpy as np
 import matplotlib.pyplot as plt
@@ -205,6 +206,7 @@ class EncData:
         bag.close()
         self.cmd_rpm = self.cmd_rpm.reshape(-1, 3)
 
+
 class OdomData:
     def __init__(self, filename):
         self.path = bag_path + filename
@@ -213,6 +215,7 @@ class OdomData:
         bag = rosbag.Bag(self.path)
         self.poses = np.array([])
         self.vel = np.array([])
+        self.orientation = np.array([])
         topics = bag.get_type_and_topic_info()[1].keys()
         topic_name = filter(lambda t: 'odom' in t, topics)
         for msg in bag.read_messages(topic_name):
@@ -222,11 +225,17 @@ class OdomData:
             vx = msg.message.twist.twist.linear.x
             vy = msg.message.twist.twist.linear.y
             w = msg.message.twist.twist.angular.z
+            ax = msg.message.pose.pose.orientation.x
+            by = msg.message.pose.pose.orientation.y
+            cz = msg.message.pose.pose.orientation.z
+            dw = msg.message.pose.pose.orientation.w
             self.poses = np.append(self.poses, [t, x, y])
             self.vel = np.append(self.vel, [t, vx, vy, w])
+            self.orientation = np.append(self.orientation, [t, ax, by, cz, dw])
         bag.close()
         self.poses = self.poses.reshape(-1, 3)
         self.vel = self.vel.reshape(-1, 4)
+        self.orientation = self.orientation.reshape(-1, 5)
 
     def plotOdom(self):
         x_limit = round(max(self.poses[:,1]))
@@ -234,7 +243,31 @@ class OdomData:
         plt.plot(self.poses[:,1], self.poses[:,2])
         plt.ylim(-3,3)
 
+
+def matchCmd(data, cmd):
+    match_data = np.zeros([data.shape[0], 5])
+    i = 0
+    cur_cmd = np.array([0, 0])
+    for j in range(data.shape[0]):
+        match_data[j,:3] = data[j]
+        if i < cmd.shape[0]:
+            if cmd[i, 0] < data[j,0]:
+                cur_cmd = cmd[i, 1:]
+                #print cur_cmd
+                match_data[j-1, 3:] = deepcopy(cur_cmd)
+                i += 1
+        match_data[j, 3:] = deepcopy(cur_cmd)
+
+    return match_data
+
+
 if __name__ == '__main__':
-    f = '../rosbag/encoder.bag'
-    e = EncData(f)
-    pass
+    #f = '../rosbag/encoder.bag'
+    #e = EncData(f)
+    f1 = '/home/k/catkin_ws/src/mbot_pointer/rosbag/rpm_data.csv'
+    f2 = '/home/k/catkin_ws/src/mbot_pointer/rosbag/rpm_cmd_data.csv'
+    cmd = np.loadtxt(f2, delimiter=',', skiprows=1, usecols=(0,2,3))
+    data = np.loadtxt(f1, delimiter=',', skiprows=1, usecols=(0,4,5))
+    match = matchCmd(data, cmd)
+    plt.plot(match[:,3])
+    plt.show()
