@@ -2,7 +2,7 @@
 
 import rospy
 from geometry_msgs.msg import Twist
-from include.helper import get_key
+from include.helperFunction import get_key
 
 def vel2rpm(cmd, vel):
     '''vel [-100,100], rpm [-255,255]'''

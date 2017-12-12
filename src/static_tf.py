@@ -9,6 +9,7 @@ import math
 base_frame_id = 'base_link'
 imu_frame_id = 'imu'
 xtion_frame_id = 'camera_link'
+pointer_frame_id = 'pointer'
 
 
 if __name__ == '__main__':
@@ -17,7 +18,6 @@ if __name__ == '__main__':
 
     now = rospy.Time.now()
     imu_static = TransformStamped()
-    xtion_static = TransformStamped()
     imu_static.header.stamp = now
     imu_static.header.frame_id = base_frame_id
     imu_static.child_frame_id = imu_frame_id
@@ -28,10 +28,16 @@ if __name__ == '__main__':
     imu_static.transform.rotation.w = q[3]
     broadcaster.sendTransform(imu_static)
 
+    xtion_static = TransformStamped()
     xtion_static.header.stamp = now
     xtion_static.header.frame_id = base_frame_id
     xtion_static.child_frame_id = xtion_frame_id
     xtion_static.transform.translation.x = 0.068
     broadcaster.sendTransform(xtion_static)
+
+    pointer_static = TransformStamped()
+    pointer_static.header.stamp = now
+    pointer_static.header.frame_id = base_frame_id
+    pointer_static.child_frame_id = pointer_frame_id
 
     rospy.spin()

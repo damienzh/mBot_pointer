@@ -12,7 +12,7 @@ from sensor_msgs import point_cloud2
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import PointCloud2
 
-from src.include.helper import get_key
+from src.include.helperFunction import get_key
 
 KEY_MAP_M = {'w':[1, 0], 's':[-1, 0], 'a':[0, 1], 'd':[0, 1], ' ':[0, 0]}
 V = 0.1

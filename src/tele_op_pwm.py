@@ -3,7 +3,7 @@
 import rospy
 from std_msgs.msg import Int16MultiArray
 
-from include.helper import get_key
+from include.helperFunction import get_key
 
 
 # def get_key():

@@ -56,7 +56,7 @@ class mbotDriver:
         leftV = linear - 0.0835 * angular
         rightV = linear + 0.0835 * angular
         self.cmd_l = self.vel2rpm(leftV)
-        self.cmd_r = self.vel2rpm(rightV)
+        self.cmd_r = -self.vel2rpm(rightV)
 
 
     def rpm_callback(self, msg):
@@ -65,11 +65,16 @@ class mbotDriver:
 
         ul = self.controller_left.update(self.cmd_l, self.feedback_l)
         ur = self.controller_right.update(self.cmd_r, self.feedback_r)
-        rospy.loginfo('left: %d %d,  right: %d %d', self.cmd_l, self.feedback_l, self.cmd_r, self.feedback_r)
+        if self.cmd_l == 0:
+            ul = 0
+        if self.cmd_r == 0:
+            ur = 0
 
         u = Int16MultiArray()
         u.data = [ul, ur]
         self.pwm_pub.publish(u)
+        rospy.loginfo('left: %d %d,  right: %d %d, uL: %d  uR: %d',
+                      self.cmd_l, self.feedback_l, self.cmd_r, self.feedback_r, ul, ur)
 
     def vel2rpm(self, vel):
         '''m/s to rpm'''

@@ -14,7 +14,7 @@ class CvDetector:
         self.net.setInput(blob)
         detections = self.net.forward()
 
-        self.objects = {}
+        self.objects = []
 
         CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat",
                    "bottle", "bus", "car", "cat", "chair", "cow", "table",
@@ -46,6 +46,20 @@ class CvDetector:
                 cv2.rectangle(image, (startX, startY), (endX, endY), COLORS[idx], 2)
                 y = startY - 15 if startY - 15 > 15 else startY + 15
                 cv2.putText(image, label_info, (startX, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
-                self.objects[label] = confidence
+                centerX = (startX + endX) / 2
+                centerY = (startY + endY) / 2
+                newItem = Item()
+                newItem.label = label
+                newItem.score = confidence
+                newItem.box = (startX, startY, endX, endY)
+                newItem.center = (centerX, centerY)
+                self.objects.append(newItem)
 
         return image
+
+class Item:
+    def __init__(self):
+        self.label = ''
+        self.score = 0
+        self.box = (0, 0, 0, 0)
+        self.center = (0, 0)

@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+import cv2
 import math
 import numpy as np
 import sys, select, tty, termios
@@ -11,17 +12,6 @@ def get_key():
     x = sys.stdin.read(1)
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, orig_settings)
     return x
-
-class FIFO:
-    '''1D FIFO array'''
-    def __init__(self, size):
-        self.size = size
-        self.data = np.array([])
-
-    def append(self, num):
-        self.data = np.append(self.data, num)
-        if self.data.size > self.size:
-            self.data = self.data[1:]
 
 
 def quaternion_to_euler_angle(w, x, y, z):
@@ -41,3 +31,8 @@ def quaternion_to_euler_angle(w, x, y, z):
     Z = math.degrees(math.atan2(t3, t4))
 
     return X, Y, Z
+
+
+def cvShow(img):
+    cv2.imshow('img', img)
+    cv2.waitKey(0)
