@@ -1,11 +1,13 @@
 <launch>
-	<include file="$(find mbot_pointer)/launch/inlcude/mbot_services.launch"/>
+
+	<rosparam command="load" file="$(find mbot_pointer)/param/common_params.yaml"/>
+
+	<!--launch common service server and tf -->
+	<include file="$(find mbot_pointer)/launch/include/mbot_services.launch"/>
 	<include file="$(find mbot_pointer)/launch/include/xtion_launch.launch"/>
 
-	<group ns="ranger">
-		<node pkg="rosserial_python" type="serial_node.py" args="/dev/ttyUSB0"
-			name="mbot_ranger">
-		</node>
-	</group>
+	<node pkg="rosserial_python" type="serial_node.py" args="/dev/ttyUSB0"
+		name="mbot_ranger">
+	</node>
 
 </launch>

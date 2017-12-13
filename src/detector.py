@@ -3,45 +3,80 @@
 import rospy
 from sensor_msgs.msg import Image, PointCloud2
 from sensor_msgs import point_cloud2
-from std_srvs.srv import Empty
+from std_srvs.srv import Trigger, TriggerResponse
+from geometry_msgs.msg import TransformStamped
 import tf2_ros, tf
+from tf.transformations import quaternion_from_euler
 import numpy as np
+import math
 import cv2
+import cv_bridge
 from include.CvDetector import CvDetector
 
 class Detector:
-    def __init__(self, rgb=None, depth=None, pcl=None):
-        '''rgb, depth are cv image
-            pcl is numpy array'''
-        self.color_img = rgb
-        self.depth_img = depth
-        self.pcl = pcl
-        self.shape = depth.shape
+    def __init__(self):
+        self.color_img = None
+        self.depth_img = None
+        self.pcl = None
         self.found_object = False
+        self.target_label = ''
 
-    def cvDetect(self):
-        d = CvDetector()
-        d.detect(self.color_img)
+        self.bridge = cv_bridge.CvBridge()
+        self.d = CvDetector()
+        rospy.Service('/ObjectDetection', Trigger, self.cvDetect)
+
+    def getData(self):
+
+        rgbTopic = rospy.get_param('ImageTopic')
+        depTopic = rospy.get_param('DepthTopic')
+        pclTopic = rospy.get_param('PointCloudTopic')
+
+        rgb_msg = rospy.wait_for_message(rgbTopic, Image)
+        rospy.loginfo('got rgb')
+        dep_msg = rospy.wait_for_message(depTopic, Image)
+        rospy.loginfo('got depth')
+        pcl_msg = rospy.wait_for_message(pclTopic, PointCloud2)
+        rospy.loginfo('got point cloud')
+
+        self.color_img = self.bridge.imgmsg_to_cv2(rgb_msg, desired_encoding='bgr8')
+        self.depth_img = self.bridge.imgmsg_to_cv2(dep_msg, desired_encoding='passthrough')
+        self.shape = self.depth_img.shape
+        p = np.array([])
+        for pts in point_cloud2.read_points(pcl_msg, skip_nans=False):
+            p = np.append(p, pts[0:3])
+        self.pcl = p.reshape(-1, 3)
+        rospy.loginfo('converted pcl')
+
+
+    def cvDetect(self, req):
+        rospy.loginfo('start get images')
+        self.getData()
+        rospy.loginfo('start detection')
+        self.d.detect(self.color_img)
         self.objects = d.objects
         self.object_num = len(self.objects)
+        rospy.loginfo('done detection')
 
         if self.object_num > 0:
             center_w = self.shape[1] / 2
             centerObj = self.objects[0]
             centerObjX = centerObj.center[0]
-            for obj in self.objects:
+            for obj in self.objects[1:]:
                 centerX = obj.center[0]
-                if centerX != centerObjX:
-                    if abs(centerX - center_w) < abs(centerObjX - center_w):
-                        centerObj = obj
+                if abs(centerX - center_w) < abs(centerObjX - center_w):
+                    centerObj = obj
             self.target_label = centerObj.label
             self.target_box = centerObj.box
             self.target_center = centerObj.center
 
             self.found_object = True
-
+            rospy.loginfo('selected object')
             if self.found_object:
+                rospy.loginfo('sending transform')
                 self.getObjPos()
+
+        return TriggerResponse(self.found_object, self.target_label)
+
 
     def checkPassage(self):
         windowWidth = int(self.shape[1]/2)
@@ -82,7 +117,36 @@ class Detector:
         point2 = sortedClusters[1].mean
 
         #set goal as the middle point of two closest clusters
-        self.goalCoor = (point1 + point2) / 2
+        self.sendGoal(point1, point2)
+
+
+
+    def sendGoal(self, p1, p2):
+        broadcaster = tf2_ros.TransformBroadcaster()
+        if p1[0] > p2[0]:
+            left = p2
+            right = p1
+        else:
+            left = p1
+            right = p2
+
+        goalX = (left[1] + right[1]) / 2
+        goalY = (left[0] + right[0]) / 2
+        yaw = math.atan2((right[1]-left[1]), (right[0] - left[0]))
+        msg = TransformStamped()
+        msg.header.stamp = rospy.Time.now()
+        msg.header.frame_id = 'base_link'
+        msg.child_frame_id = self.target_label
+        msg.transform.translation.x = goalX
+        msg.transform.translation.y = goalY
+        q = quaternion_from_euler(0, 0, yaw)
+        msg.transform.rotation.x = q[0]
+        msg.transform.rotation.y = q[1]
+        msg.transform.rotation.z = q[2]
+        msg.transform.rotation.w = q[3]
+
+        broadcaster.sendTransform(msg)
+        rospy.loginfo('sent goal pose')
 
 
     def CropDepth(self, dimg, box):
@@ -120,10 +184,10 @@ class Detector:
         return cloud
 
     def pclSelect(self, pcl, a, min, max):
+        '''trim data along which axis, x:0, y:1, z:2'''
         cloud = pcl[np.logical_and(pcl[:, a] > min, pcl[:, a] < max)]
 
         return cloud
-
 
 
 class PointCluster:
@@ -188,11 +252,8 @@ class Cluster:
         maxY = self.array[np.argmax(self.array[:, 1])]
         minY = self.array[np.argmin(self.array[:, 1])]
 
-def getTarget():
-    pass
-
 
 if __name__ == '__main__':
     rospy.init_node('detector')
-    rospy.Service('getTarget', Empty, getTarget)
+    d = Detector()
     rospy.spin()

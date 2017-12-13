@@ -8,7 +8,7 @@ from nav_msgs.msg import Odometry
 from tf.transformations import quaternion_from_euler
 from tf.broadcaster import TransformBroadcaster
 import tf2_ros
-from std_srvs.srv import Empty
+from std_srvs.srv import Empty, EmptyResponse
 import math
 from copy import deepcopy
 
@@ -34,6 +34,7 @@ class mBotOdom:
         self.omega = 0
         self.acc_x = 0
         self.acc_y = 0
+        self.gyro_z = 0
         self.dt = 0
 
         self.new_msg_time = 0
@@ -150,19 +151,21 @@ class mBotOdom:
         self.kalman_k = p * self.kalman_h / (p * self.kalman_h**2 + self.kalman_r)
         self.theta = theta + self.kalman_k * (z - self.kalman_h * theta)
         self.kalman_p = (1 - self.kalman_p*self.kalman_h) * p
-        print 'Kalman K', self.kalman_k, 'Kalman P', self.kalman_p
+        #print 'Kalman K', self.kalman_k, 'Kalman P', self.kalman_p
 
     def reset_odom(self, req):
         rospy.loginfo('reset odom')
         self.x = 0
         self.y = 0
         self.theta = 0
-        self.dx = 0
-        self.dy = 0
-        self.v = 0
-        self.omega = 0
+        #self.dx = 0
+        #self.dy = 0
+        #self.v = 0
+        #self.omega = 0
         self.new_msg_time =0
-        self.prev_msg_time = 0
+        self.prev_msg_time = rospy.Time.now().to_sec()
+
+        return EmptyResponse()
 
 if __name__ == '__main__':
     rospy.init_node('mbot_odom')

@@ -9,6 +9,7 @@ class CvDetector:
         prototxt = '/home/k/catkin_ws/src/mbot_pointer/param/Caffe/MobileNetSSD_deploy.prototxt.txt'
         self.net = cv2.dnn.readNetFromCaffe(prototxt, model)
 
+
     def detect(self, img):
         blob = cv2.dnn.blobFromImage(cv2.resize(img, (300, 300)), 0.007843, (300, 300), 127.5)
         self.net.setInput(blob)
@@ -53,7 +54,9 @@ class CvDetector:
                 newItem.score = confidence
                 newItem.box = (startX, startY, endX, endY)
                 newItem.center = (centerX, centerY)
-                self.objects.append(newItem)
+                newItem.checkInCenter(w)
+                if newItem.inCenter:
+                    self.objects.append(newItem)
 
         return image
 
@@ -63,3 +66,8 @@ class Item:
         self.score = 0
         self.box = (0, 0, 0, 0)
         self.center = (0, 0)
+        self.inCenter = False
+
+    def checkInCenter(self, imgWidth):
+        if self.box[0] < imgWidth/2 and self.box[2] > imgWidth/2:
+            self.inCenter = True

@@ -1,4 +1,11 @@
 <launch>
-    <node pkg="mbot_pointer" name="tf" type="static_tf.py"/>
 	<node pkg="mbot_pointer" name="service" type="service_server.py"/>
+
+    <!-- static_transform_publisher x y z yaw pitch roll frame_id child_frame_id -->
+    <node pkg="tf2_ros" type="static_transform_publisher" name="imu_broadcaster"
+          args="0 0 0 0 0 3.1415926 base_link imu" />
+    <node pkg="tf2_ros" type="static_transform_publisher" name="xtion_broadcaster"
+          args="0.068 0 0 0 0 0 base_link camera_link"/>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="pointer_broadcaster"
+          args="0.11 0 0 0 0 0 base_link pointer"/>
 </launch>
