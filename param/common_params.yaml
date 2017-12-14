@@ -1,4 +1,4 @@
 ImageTopic: /camera/rgb/image_raw
-DepthTopic: /camera/depth_registered/image_raw
-PointCloudTopic: /camera/depth_registered/points
+DepthTopic: /camera/depth/image_raw
+PointCloudTopic: /camera/depth/points
 

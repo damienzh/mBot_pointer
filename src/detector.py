@@ -3,7 +3,7 @@
 import rospy
 from sensor_msgs.msg import Image, PointCloud2
 from sensor_msgs import point_cloud2
-from std_srvs.srv import Trigger, TriggerResponse
+from std_srvs.srv import Empty, EmptyResponse
 from geometry_msgs.msg import TransformStamped
 import tf2_ros, tf
 from tf.transformations import quaternion_from_euler
@@ -23,7 +23,7 @@ class Detector:
 
         self.bridge = cv_bridge.CvBridge()
         self.d = CvDetector()
-        rospy.Service('/ObjectDetection', Trigger, self.cvDetect)
+        rospy.Service('/ObjectDetection', Empty, self.cvDetect)
 
     def getData(self):
 
@@ -53,7 +53,7 @@ class Detector:
         self.getData()
         rospy.loginfo('start detection')
         self.d.detect(self.color_img)
-        self.objects = d.objects
+        self.objects = self.d.objects
         self.object_num = len(self.objects)
         rospy.loginfo('done detection')
 
@@ -75,7 +75,7 @@ class Detector:
                 rospy.loginfo('sending transform')
                 self.getObjPos()
 
-        return TriggerResponse(self.found_object, self.target_label)
+        return EmptyResponse()
 
 
     def checkPassage(self):
@@ -88,7 +88,7 @@ class Detector:
 
         #Kmeans segment object on cropped depth image 3 clusters: background, object, floor
         label, center = self.depthKMeans(depthCrop, 3)
-
+        print('kmeans done')
         #median label represent pixel indices of object in depth image
         n = np.argwhere(center == np.median(center))[0][0]
         targetDepth = self.selectDepth(depthCrop, label, n)
@@ -103,19 +103,21 @@ class Detector:
 
         #remove nan points in cropped cloud
         pclFilter = self.pclRemoveNan(pclCrop)
-
+        print('trim pcl')
         #downsample clouds of limited height
         pclSelect = self.pclSelect(pclFilter, 1, -0.4, 0.1) # in optical frame y axis represent height
 
         #cluster selected points base on distance between each other
         c = PointCluster()
+        print('cluster pcl')
         c.cluster(pclSelect, 0.5) #points distance within 0.5m will be in one cluster
         sortedClusters = c.ObjList() #get a list of cluster objects, sorted on mean distance from camera
 
         #select two closest cluster to calculate goal coordinates
         point1 = sortedClusters[0].mean
         point2 = sortedClusters[1].mean
-
+        rospy.loginfo('got target points')
+        print(point1, point2)
         #set goal as the middle point of two closest clusters
         self.sendGoal(point1, point2)
 

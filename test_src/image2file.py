@@ -10,13 +10,16 @@ import tf
 import tf2_ros, tf2_sensor_msgs
 import numpy as np
 import sys
+from matplotlib import pyplot as plt
+
+from sensor_msgs.point_cloud2 import create_cloud_xyz32
 
 rospy.init_node('test_node')
 # name = sys.argv
 
-dp_im = rospy.wait_for_message('/camera/depth_registered/image_raw', Image)
+dp_im = rospy.wait_for_message('/camera/depth/image_raw', Image)
 c_im = rospy.wait_for_message('/camera/rgb/image_raw', Image)
-clouds = rospy.wait_for_message('/camera/depth_registered/points', PointCloud2)
+clouds = rospy.wait_for_message('/camera/depth/points', PointCloud2)
 
 b = cv_bridge.CvBridge()
 
