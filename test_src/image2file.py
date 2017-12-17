@@ -4,52 +4,79 @@ import rospy
 from sensor_msgs.msg import Image
 import cv2, cv_bridge
 import time
+import os
 from sensor_msgs.msg import PointCloud2
 from sensor_msgs import point_cloud2
-import tf
-import tf2_ros, tf2_sensor_msgs
+from std_srvs.srv import Empty, EmptyResponse
+import tf2_ros
 import numpy as np
 import sys
 from matplotlib import pyplot as plt
 
-from sensor_msgs.point_cloud2 import create_cloud_xyz32
 
-rospy.init_node('test_node')
-# name = sys.argv
+class ImageSaver:
+    def __init__(self):
+        self.bridge = cv_bridge.CvBridge()
+        self.rgb_sub = rospy.Subscriber('/camera/rgb/image_raw', Image, self.rgb_callback)
+        self.dep_sub = rospy.Subscriber('/camera/depth/image_raw', Image, self.dep_callback)
+        self.depreg_sub = rospy.Subscriber('/camera/depth_registered/image_raw', Image, self.depreg_callback)
+        self.pcl_sub = rospy.Subscriber('/camera/depth/points', PointCloud2, self.pcl_callback)
+        self.pclreg_sub = rospy.Subscriber('/camera/depth_registered/points', PointCloud2, self.pclreg_callback)
 
-dp_im = rospy.wait_for_message('/camera/depth/image_raw', Image)
-c_im = rospy.wait_for_message('/camera/rgb/image_raw', Image)
-clouds = rospy.wait_for_message('/camera/depth/points', PointCloud2)
+        rospy.Service('saveImages', Empty, self.saveImages)
+        rospy.loginfo('call service "saveImage" to save images to disk')
 
-b = cv_bridge.CvBridge()
+    def rgb_callback(self, msg):
+        self.rgb_img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
 
-im_d = b.imgmsg_to_cv2(dp_im, desired_encoding='passthrough')
-im_c = b.imgmsg_to_cv2(c_im, desired_encoding='bgr8')
+    def dep_callback(self, msg):
+        self.dep_img = self.bridge.imgmsg_to_cv2(msg, desired_encoding="passthrough")
 
-#print type(im_d)
-# print type(im_c)
+    def depreg_callback(self, msg):
+        self.depreg_img = self.bridge.imgmsg_to_cv2(msg, desired_encoding="passthrough")
 
-timestr = time.strftime("%Y%m%d-%H%M%S")
+    def pcl_callback(self, msg):
+        self.pcl = msg
 
-c_filename = 'color_image'+timestr+'.png'
-d_filename = 'depth_image'+timestr+'.png'
-pc_filename = 'point_cloud'+timestr+'.txt'
+    def pclreg_callback(self, msg):
+        self.pclreg = msg
 
-cv2.imwrite(c_filename, im_c)
-print('saved color image')
-cv2.imwrite(d_filename, im_d)
-print('saved depth image')
-#cv2.waitKey(0)
-#np.savetxt('sample_depth_image', im)
+    def convertPCL(self, pcl):
+        '''read points from PointCloud2 message'''
+        p = np.array([])
+        for pts in point_cloud2.read_points(pcl, skip_nans=False):
+            p = np.append(p, pts[0:3])
+        return p.reshape(-1, 3)
 
-tf_buffer = tf2_ros.Buffer()
-tf_l = tf2_ros.TransformListener(tf_buffer)
+    def saveImages(self, req):
+        timestr = time.strftime("%Y%m%d-%H%M%S")
 
-p = np.array([])
-for pts in point_cloud2.read_points(clouds, skip_nans=False):
-    p = np.append(p, pts[0:3])
-p = p.reshape(-1, 3)
-'''point cloud frame is optical frame, z represent depth, x right, y down'''
-#print(p.dtype)
-np.savetxt(pc_filename, p)
-print 'saved point cloud'
+        c_filename = 'color_image_' + timestr + '.png'
+        d_filename = 'depth_image_' + timestr + '.png'
+        dreg_filename = 'depth_registered_image_' + timestr + '.png'
+        pc_filename = 'point_cloud_' + timestr + '.txt'
+        pcreg_filename = 'point_cloud_' + timestr + '.txt'
+
+        path = os.path.join(os.path.expanduser('~'), 'catkin_ws/src/mbot_pointer/test_src/Images')
+
+        rospy.loginfo('converting point cloud to numpy array')
+        pcl = self.convertPCL(self.pcl)
+        pcl_reg = self.convertPCL(self.pclreg)
+
+        rospy.loginfo('saving files')
+        cv2.imwrite(os.path.join(path, c_filename), self.rgb_img)
+        cv2.imwrite(os.path.join(path, d_filename), self.dep_img)
+        cv2.imwrite(os.path.join(path, dreg_filename), self.depreg_img)
+
+        np.savetxt(os.path.join(path, pc_filename), pcl)
+        np.savetxt(os.path.join(path, pcreg_filename), pcl_reg)
+
+        rospy.loginfo('Images saved')
+
+        return EmptyResponse()
+
+
+if __name__ == '__main__':
+    rospy.init_node('save_image')
+    saver = ImageSaver()
+    rospy.spin()

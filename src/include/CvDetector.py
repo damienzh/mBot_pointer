@@ -2,13 +2,14 @@
 import cv2
 import numpy as np
 from copy import deepcopy
+import os
 
 class CvDetector:
     def __init__(self):
-        model = '/home/k/catkin_ws/src/mbot_pointer/param/Caffe/MobileNetSSD_deploy.caffemodel'
-        prototxt = '/home/k/catkin_ws/src/mbot_pointer/param/Caffe/MobileNetSSD_deploy.prototxt.txt'
+        path = os.path.join(os.path.expanduser('~'), 'catkin_ws/src/mbot_pointer/param/Caffe')
+        model = os.path.join(path, 'MobileNetSSD_deploy.caffemodel')
+        prototxt = os.path.join(path, 'MobileNetSSD_deploy.prototxt.txt')
         self.net = cv2.dnn.readNetFromCaffe(prototxt, model)
-
 
     def detect(self, img):
         blob = cv2.dnn.blobFromImage(cv2.resize(img, (300, 300)), 0.007843, (300, 300), 127.5)

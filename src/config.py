@@ -23,14 +23,6 @@ wheelbase = 0.175
 SERVO_0 = 0     # degree
 SERVO_90 = 65   # degree
 SERVO_180 = 140 # degree
-# imd_filename = 'test_data/R200/depth_image_dc4_20170408-170421.png'  # box
-# imd_filename = 'test_data/R200/depth_image_dc4_20170408-171930.png'  # doorway
-# imd_filename = 'test_data/R200/depth_image_dc4_20170408-171342.png'  # table
-# imc_filename = 'test_data/R200/color_image20170408-170543.png'
 
-xtion_depth = ['xtion_depth_image_1.png', 'xtion_depth_image_2.png', 'xtion_depth_image_3.png',
-               'xtion_depth_image_4.png']
-xtion_color = ['xtion_color_image_1.png', 'xtion_color_image_2.png', 'xtion_color_image_3.png',
-               'xtion_color_image_4.png']
-
+test_image_path = '/home/k/catkin_ws/src/mbot_pointer/test_src/Images'
 path = 'test_data/xtion/'
