@@ -2,3 +2,7 @@ ImageTopic: /camera/rgb/image_raw
 DepthTopic: /camera/depth/image_raw
 PointCloudTopic: /camera/depth/points
 
+mbot_odom:
+  imu_filter: kalman
+# complementary
+

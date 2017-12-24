@@ -37,6 +37,7 @@ class Detector:
         rospy.Subscriber(rgbTopic, Image, self.rgb_callback)
         rospy.Subscriber(depTopic, Image, self.dep_callback)
         rospy.Subscriber(pclTopic, PointCloud2, self.pcl_callback)
+        self.frame_pub = rospy.Publisher('add_frame', TransformStamped, queue_size=1)
 
         rospy.Service('/objectDetection', Empty, self.cvDetect)
 
@@ -98,7 +99,7 @@ class Detector:
             cv2.waitKey(0)
 
         if self.found_object:
-            rospy.loginfo('sending transform')
+            rospy.loginfo('object found, getting coordinates')
             self.getObjPos()
 
         return EmptyResponse()
@@ -108,30 +109,32 @@ class Detector:
         checkWindow = (self.shape[1]/2 - windowWidth/2, self.shape[1]/2 + windowWidth/2)
 
     def getObjPos(self):
-        #Crop depth image of target object
-        depthCrop = self.CropDepth(self.depth_img, self.target_box)
-
-        #Kmeans segment object on cropped depth image 3 clusters: background, object, floor
-        label, center = self.depthKMeans(depthCrop, 3)
-        print('kmeans done')
-        #median label represent pixel indices of object in depth image
-        n = np.argwhere(center == np.median(center))[0][0]
-        targetDepth = self.selectDepth(depthCrop, label, n)
+        # #Crop depth image of target object
+        # depthCrop = self.CropDepth(self.depth_img, self.target_box)
+        #
+        # #Kmeans segment object on cropped depth image 3 clusters: background, object, floor
+        # label, center = self.depthKMeans(depthCrop, 3)
+        # print('kmeans done')
+        # #median label represent pixel indices of object in depth image
+        # n = np.argwhere(center == np.median(center))[0][0]
+        # targetDepth = self.selectDepth(depthCrop, label, n)
 
         #Crop point cloud
         pcl = self.pcl.reshape(self.shape[0], self.shape[1], 3)
         pclCrop = self.CropPCL(pcl, self.target_box)
 
-        #select points of object base on depth kmeans result
-        pclCrop = pclCrop.reshape(-1, 3)
-        pclCrop = pclCrop[(label == n).flatten()]
+        # #select points of object base on depth kmeans result
+        # pclCrop = pclCrop.reshape(-1, 3)
+        # pclCrop = pclCrop[(label == n).flatten()]
 
         #remove nan points in cropped cloud
-        pclFilter = self.pclRemoveNan(pclCrop)
+        pclSelect = self.pclRemoveNan(pclCrop)
         print('trim pcl')
         #downsample clouds of limited height
-        pclSelect = self.pclSelect(pclFilter, 1, -0.4, 0.1) # in optical frame y axis represent height
+        #pclSelect = self.pclSelect(pclFilter, 1, -0.4, 0.1) # in optical frame y axis represent height
 
+        #keep planar points only
+        pclSelect = np.vstack((pclSelect[:,0], pclSelect[:,2])).transpose()
         #cluster selected points base on distance between each other
         c = PointCluster()
         print('cluster pcl')
@@ -139,38 +142,39 @@ class Detector:
         sortedClusters = c.ObjList() #get a list of cluster objects, sorted on mean distance from camera
 
         #select two closest cluster to calculate goal coordinates
-        point1 = sortedClusters[0].mean
-        point2 = sortedClusters[1].mean
+        left_point = sortedClusters[0].left
+        right_point = sortedClusters[0].right
+        lower_point = sortedClusters[0].bottom
+        # select the board face robot
+        point1 = lower_point
+        if point1[0,1] > 0:
+            point2 = left_point
+        else:
+            point2 = right_point
+
         rospy.loginfo('got target points')
         print(point1, point2)
         #set goal as the middle point of two closest clusters
-        #self.sendGoal(point1, point2)
+        msg = self.genFrame(point1, point2)
+        self.frame_pub.publish(msg)
 
-    def sendGoal(self, p1, p2):
-        if p1[0] > p2[0]:
-            left = p2
-            right = p1
-        else:
-            left = p1
-            right = p2
-
-        goal = MoveBaseGoal()
-        goalX = (left[1] + right[1]) / 2
-        goalY = (left[0] + right[0]) / 2
-        yaw = math.atan2((right[1]-left[1]), (right[0] - left[0]))
-
-        goal.target_pose.header.frame_id = 'base_link'
-        goal.target_pose.pose.position.x = goalX
-        goal.target_pose.pose.position.y = goalY
+    def genFrame(self, p1, p2):
+        '''create ROS frame transform message of the object'''
+        central = (p1 + p2) / 2
+        msg = TransformStamped()
+        msg.header.stamp = rospy.Time.now()
+        msg.header.frame_id = 'base_link'
+        msg.child_frame_id = 'target'
+        msg.transform.translation.x = central[0,1]
+        msg.transform.translation.y = -central[0,0]
+        yaw = math.atan2(-central[0,0], central[0,1])
         q = quaternion_from_euler(0, 0, yaw)
-        goal.target_pose.pose.orientation.x = q[0]
-        goal.target_pose.pose.orientation.y = q[1]
-        goal.target_pose.pose.orientation.z = q[2]
-        goal.target_pose.pose.orientation.w = q[3]
+        msg.transform.rotation.x = q[0]
+        msg.transform.rotation.y = q[1]
+        msg.transform.rotation.z = q[2]
+        msg.transform.rotation.w = q[3]
 
-        self.moveClient.send_goal(goal)
-        rospy.loginfo('sent goal pose')
-        self.moveClient.wait_for_result()
+        return msg
 
     def CropDepth(self, dimg, box):
         cropped = dimg[box[1]:box[3], box[0]:box[2]]

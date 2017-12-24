@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import numpy as np
+from copy import deepcopy
 
 class FIFO:
     '''1D FIFO array'''
@@ -22,10 +23,9 @@ class PointCluster:
 
     def distanceAr(self, pt, array):
         if array.size > 2:
-            return np.sqrt(np.sum((pt - array)**2, axis=1))
+            return np.sqrt(np.sum((pt - array)**2 ,axis=1))
         else:
             return self.distancePt(pt, array)
-
 
     def cluster(self, points, thresh):
         self.data = points
@@ -59,6 +59,16 @@ class PointCluster:
         return newList
 
 
+    def clusterDistance(self, c1, c2):
+        '''minimum distance between two group of 2D points'''
+        mindis = np.inf
+        for p in c1:
+            dis = np.min(self.distanceAr(p, c2))
+            if dis < mindis:
+                mindis = dis
+
+        return mindis
+
 
 class Cluster:
     def __init__(self, array):
@@ -69,9 +79,19 @@ class Cluster:
         self.distance = np.sqrt(np.sum(np.multiply(self.array, self.array), axis=1))
         self.meanDis = np.mean(self.distance)
         self.mean = np.mean(self.array, axis=0)
+        self.maxX = np.max(self.array[:, 0])
+        self.maxY = np.max(self.array[:, 1])
+        self.minX = np.min(self.array[:, 0])
+        self.minY = np.min(self.array[:, 1])
+        self.sizeX = self.maxX - self.minX
+        self.sizeY = self.maxY - self.minY
+        self.centerX = (self.maxX + self.minX) / 2
+        self.centerY = (self.maxY + self.minY) / 2
+        self.right = self.array[np.argmax(self.array[:, 0])]
+        self.left = self.array[np.argmin(self.array[:, 0])]
+        self.top = self.array[np.argmax(self.array[:, 1])]
+        self.bottom = self.array[np.argmin(self.array[:, 1])]
+
 
     def calcArea(self):
-        maxX = self.array[np.argmax(self.array[:, 0])]
-        minX = self.array[np.argmin(self.array[:, 0])]
-        maxY = self.array[np.argmax(self.array[:, 1])]
-        minY = self.array[np.argmin(self.array[:, 1])]
+        pass

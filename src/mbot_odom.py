@@ -17,7 +17,7 @@ from config import wheelbase, count2dis
 class mBotOdom:
     def __init__(self):
         '''x,y,theta,dx,dy states in world frame'''
-        self.filter = rospy.get_param('~imu_filter', 'complementary')
+        self.filter = rospy.get_param('/mbot_odom/imu_filter', 'kalman')
         if self.filter == 'kalman':
             rospy.loginfo('use kalman filter')
         else:
@@ -144,10 +144,10 @@ class mBotOdom:
     def kalman(self):
         enc = math.atan2(self.dis_right - self.dis_left, wheelbase)
         z = self.theta + enc
-        '''predict'''
+        #predict
         theta = self.theta + self.gyro_z * self.dt
         p = self.kalman_p + self.kalman_q
-        '''update'''
+        #update
         self.kalman_k = p * self.kalman_h / (p * self.kalman_h**2 + self.kalman_r)
         self.theta = theta + self.kalman_k * (z - self.kalman_h * theta)
         self.kalman_p = (1 - self.kalman_p*self.kalman_h) * p

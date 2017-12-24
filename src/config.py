@@ -17,12 +17,12 @@ MBOT_WIDTH = 175 - 30   # total width - one track width
 MBOT_LENGTH = 200
 MBOT_WHEEL_DISTANCE = 120
 
-count2dis = 0.000355
+count2dis = 0.000357
 wheelbase = 0.175
 
 SERVO_0 = 0     # degree
 SERVO_90 = 65   # degree
 SERVO_180 = 140 # degree
 
-test_image_path = '/home/k/catkin_ws/src/mbot_pointer/test_src/Images'
+test_image_path = '/home/k/catkin_ws/src/mbot_pointer/test_src/Images/'
 path = 'test_data/xtion/'
