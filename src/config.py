@@ -17,8 +17,8 @@ MBOT_WIDTH = 175 - 30   # total width - one track width
 MBOT_LENGTH = 200
 MBOT_WHEEL_DISTANCE = 120
 
-count2dis = 0.000357
-wheelbase = 0.175
+count2dis = 0.000355
+wheelbase = 0.245
 
 SERVO_0 = 0     # degree
 SERVO_90 = 65   # degree

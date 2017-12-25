@@ -150,6 +150,7 @@ class EncData:
         linear = (vl + vr) / 2
         angular = (vr - vl) / wheelbase
         self.velocity = np.vstack((linear, angular)).transpose()
+        #print(wheelbase)
 
     def calcDistance(self):
         self.distance = np.sum(self.data[:,1:], axis=0) * count2dis
