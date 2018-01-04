@@ -162,7 +162,7 @@ class mBotOdom:
         #self.dy = 0
         #self.v = 0
         #self.omega = 0
-        self.new_msg_time =0
+        self.new_msg_time = 0
         self.prev_msg_time = rospy.Time.now().to_sec()
 
         return EmptyResponse()

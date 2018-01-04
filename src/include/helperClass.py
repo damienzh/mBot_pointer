@@ -95,3 +95,42 @@ class Cluster:
 
     def calcArea(self):
         pass
+
+class KalmanFilter:
+    def __init__(self):
+        self.states_est = None
+        self.states_pre = None
+        self.P_est = None
+        self.P_pre = None
+
+        self.K = None
+        self.Q = None
+        self.R = None
+
+
+        self.A = None
+        self.B = None
+        self.H = None
+
+
+    def predict(self, u):
+        self.states_pre = np.dot(self.A, self.states_est) + np.dot(self.B, u)
+        self.P_pre = np.dot(np.dot(self.A, self.P_est), self.A.T)
+
+        return (self.states_pre, self.P_pre)
+
+
+    def estimate(self, z):
+        K_part = np.linalg.inv(np.dot(np.dot(self.P_pre, self.H), self.H.T) + self.R)
+        self.K = np.dot(np.dot(self.P_pre, self.H.T), K_part)
+
+        innovation = z - np.dot(self.H, self.states_pre)
+        self.states_est = self.states_pre + np.dot(self.K, innovation)
+        I = np.identity(self.states_pre.size)
+        self.P_est = np.dot((I - np.dot(self.K, self.H)), self.P_pre)
+
+        return (self.states_est, self.P_est)
+
+    def set_param(self, p):
+        m = np.matrix(p)
+        return m
