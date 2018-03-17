@@ -1,8 +1,12 @@
 <launch>
 
-	<!--launch common service server and tf -->
+	<!-- load common parameters and service server, publish static tf -->
 	<include file="$(find mbot_pointer)/launch/include/mbot_services.launch"/>
+
+	<!-- launch xtion camera and depth2laser pkg -->
 	<include file="$(find mbot_pointer)/launch/include/xtion_launch.launch"/>
+
+	<!-- launch arduino client and odometry and motor driver-->
 	<include file="$(find mbot_pointer)/launch/include/mbot_driver.launch"/>
 
 

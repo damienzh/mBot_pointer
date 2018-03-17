@@ -1,0 +1,20 @@
+<launch>
+    <arg name="model" default="$(find mbot_pointer)/urdf/mbot.xacro"/>
+
+    <include file="$(find mbot_pointer)/launch/mbot_gazebo.launch"/>
+
+    <rosparam command="load" file="$(find mbot_pointer)/urdf/config/joints.yaml"
+              ns="mbot_joint_state_controller"/>
+    <rosparam command="load" file="$(find mbot_pointer)/urdf/config/diffdrive.yaml"
+              ns="mbot_diff_drive_controller"/>
+
+    <node name="mbot_controller_spawner" pkg="controller_manager" type="spawner"
+          args="mbot_joint_state_controller
+                mbot_diff_drive_controller
+                --shutdown-timeout 3"/>
+
+    <node name="rqt_robot_steering" pkg="rqt_robot_steering" type="rqt_robot_steering">
+        <param name="default_topic" value="/mbot_diff_drive_controller/cmd_vel"/>
+    </node>
+
+</launch>

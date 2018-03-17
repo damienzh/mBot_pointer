@@ -20,26 +20,28 @@ class TeleMoveBase:
 
 
     def odom_callback(self, msg):
-        self.x = msg.pose.pose.position.x
-        self.y = msg.pose.pose.position.y
+        self.robot_x = msg.pose.pose.position.x
+        self.robot_y = msg.pose.pose.position.y
         q = msg.pose.pose.orientation
-        self.theta = euler_from_quaternion([q.x, q.y, q.z, q.w])[2]
+        self.robot_theta = euler_from_quaternion([q.x, q.y, q.z, q.w])[2]
 
     def move_base(self, goal):
         goalPose = self.extractPose(goal)
         while not self.arrived:
-            distance = self.calcDistance((self.x, self.y),(goalPose[0], goalPose[1]))
-            angle = goalPose[2] - self.theta
+            distance = self.calcDistance((self.robot_x, self.robot_y),(goalPose[0], goalPose[1]))
+            angle = goalPose[2] - self.robot_theta
 
             self.rate.sleep()
 
     def calcDistance(self, robot, goal):
         return math.sqrt((robot[0]-goal[0])**2 + (robot[1]-goal[1])**2)
 
-    def extractPose(self, goal):
-        x = goal.transform.translation.x
-        y = goal.transform.translation.y
+    def extractPose(self, MoveBaseGoal):
+        goal = MoveBaseGoal.goal.target_pose.pose
+        x = goal.position.x
+        y = goal.position.y
         yaw = euler_from_quaternion((goal.transform.roation.x, goal.transform.roation.y,
                                     goal.transform.roation.z, goal.transform.roation.w))[2]
 
         return (x,y,yaw)
+
