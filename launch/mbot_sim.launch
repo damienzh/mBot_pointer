@@ -1,7 +1,10 @@
 <launch>
     <arg name="model" default="$(find mbot_pointer)/urdf/mbot.xacro"/>
+    <arg name="rvizconfig" default="$(find mbot_pointer)/rviz/mbot_sim.rviz"/>
 
     <include file="$(find mbot_pointer)/launch/mbot_gazebo.launch"/>
+
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig"/>
 
     <rosparam command="load" file="$(find mbot_pointer)/urdf/config/joints.yaml"
               ns="mbot_joint_state_controller"/>

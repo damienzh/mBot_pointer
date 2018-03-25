@@ -1,0 +1,10 @@
+<launch>
+    <arg name="model" default="$(find mbot_pointer)/urdf/mbot.xacro"/>
+
+    <param name="robot_description" command="$(find xacro)/xacro.py $(arg model)" />
+
+    <!-- push robot_description to factory and spawn robot in gazebo -->
+    <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model"
+          args="-z 1.0 -unpause -urdf -model mbot -param robot_description" respawn="false" output="screen" />
+
+</launch>
