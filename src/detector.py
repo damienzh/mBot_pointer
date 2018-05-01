@@ -30,9 +30,9 @@ class Detector:
         self.bridge = cv_bridge.CvBridge()
         self.d = CvDetector()
 
-        rgbTopic = rospy.get_param('ImageTopic')
-        depTopic = rospy.get_param('DepthTopic')
-        pclTopic = rospy.get_param('PointCloudTopic')
+        rgbTopic = rospy.get_param('ImageTopic', default='/camera/rgb/image_raw')
+        depTopic = rospy.get_param('DepthTopic', default='/camera/depth/image_raw')
+        pclTopic = rospy.get_param('PointCloudTopic', default='/camera/depth/points')
 
         rospy.Subscriber(rgbTopic, Image, self.rgb_callback)
         rospy.Subscriber(depTopic, Image, self.dep_callback)
