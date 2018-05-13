@@ -1,6 +1,6 @@
 <launch>
     <node pkg="rosserial_python" type="serial_node.py" name="mbot_ranger" args="/dev/ttyUSB0"/>
     <node pkg="mbot_pointer" type="mbot_odom.py" name="mbot_odom"/>
-    <node pkg="mbot_pointer" type="mbot_driver.py" name="mbot_driver"/>
+    <!--<node pkg="mbot_pointer" type="mbot_driver.py" name="mbot_driver"/>-->
 
 </launch>

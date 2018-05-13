@@ -72,11 +72,15 @@ class Detector:
         rospy.loginfo('start get images')
         self.getData()
         rospy.loginfo('start detection')
+        if self.test:
+            t1 = rospy.Time.now().to_sec()
         detcetedImg = self.d.detect(self.color_img)
         self.objects = self.d.objects
         self.object_num = len(self.objects)
         if self.test:
+            t2 = rospy.Time.now().to_sec()
             print self.object_num
+            rospy.loginfo('Time for object detection: {}'.format(t2-t1))
         rospy.loginfo('done detection')
 
         if self.object_num > 0:
@@ -100,7 +104,11 @@ class Detector:
 
         if self.found_object:
             rospy.loginfo('object found, getting coordinates')
+            t1 = rospy.Time.now().to_sec()
             self.getObjPos()
+            t2 = rospy.Time.now().to_sec()
+            if self.test:
+                rospy.loginfo('Time for getting object position: {}'.format(t2 - t1))
 
         return EmptyResponse()
 

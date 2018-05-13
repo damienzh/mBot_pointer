@@ -4,7 +4,7 @@
 
     <include file="$(find mbot_pointer)/launch/mbot_gazebo.launch"/>
 
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)"/>
 
     <rosparam command="load" file="$(find mbot_pointer)/urdf/config/joints.yaml"
               ns="mbot_joint_state_controller"/>
@@ -13,8 +13,7 @@
 
     <node name="mbot_controller_spawner" pkg="controller_manager" type="spawner"
           args="mbot_joint_state_controller
-                mbot_diff_drive_controller
-                --shutdown-timeout 3"/>
+                mbot_diff_drive_controller"/>
 
     <node name="rqt_robot_steering" pkg="rqt_robot_steering" type="rqt_robot_steering">
         <param name="default_topic" value="/mbot_diff_drive_controller/cmd_vel"/>

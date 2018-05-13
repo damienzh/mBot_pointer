@@ -12,7 +12,7 @@
         <param name="iterations" value="5"/><!-- number of iteration of scanmatcher-->
         <param name="lsigma" value="0.075"/><!-- the sigma of beam used for likelihood computation-->
         <param name="lskip" value="0"/><!-- number of beam to skip in each scan-->
-        <param name="linearUpdate" value="0.5"/><!-- process a scan each time the robot translate this far-->
+        <param name="linearUpdate" value="0.3"/><!-- process a scan each time the robot translate this far-->
         <param name="angularUpdate" value="0.2"/><!-- process a scan each time the robot rotate this far-->
         <param name="particles" value="30"/><!-- number of particles in the filter-->
 

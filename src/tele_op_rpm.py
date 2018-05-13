@@ -7,12 +7,12 @@ from include.helperFunction import get_key
 
 def vel2rpm(cmd, vel):
     '''vel [-100,100], rpm [-255,255]'''
-    p = [cmd[0]*vel, -cmd[1]*vel]
+    p = [int(cmd[0]*vel), int(-cmd[1]*vel)]
 
     return p
 
 V = 60
-KEY_MAP_M = {'w':[1, 1], 's':[-1, -1], 'a':[-1, 1], 'd':[1, -1], ' ':[0, 0]}
+KEY_MAP_M = {'w':[1, 1], 's':[-1, -1], 'a':[-0.5, 0.5], 'd':[0.5, -0.5], ' ':[0, 0]}
 KEY_MAP_V = {'q':10, 'e':-10}
 
 if __name__ == '__main__':
@@ -30,6 +30,7 @@ if __name__ == '__main__':
            "  space: stop\n" \
            "  Esc: exit\n" \
            "  Default speed 60 rpm\n"\
+           "  Max 180 rpm \n"\ 
            "=======================================================\n"
     print info
     pub_rpm.publish(rpm)
@@ -44,7 +45,7 @@ if __name__ == '__main__':
             rpm.data = vel2rpm(KEY_MAP_M[keyin], V)
             pub_rpm.publish(rpm)
         elif keyin == chr(27):
-            print "Ctrl-C to exit"
+            print "Ctrl-C to shutdown node"
             break
         else:
             print "Not valid key"
