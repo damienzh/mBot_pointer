@@ -10,13 +10,13 @@ class tf_broadcaster:
         self.buffer = tf2_ros.Buffer()
         self.br = tf2_ros.TransformBroadcaster()
         tf2_ros.TransformListener(self.buffer)
-        self.frames = []
+        self.frame_list = []
         self.rate.sleep()
         rospy.Subscriber('add_frame', TransformStamped, self.add_frame)
 
     def add_frame(self, msg):
         t = self.transform('odom', msg)
-        self.frames.append(t)
+        self.frame_list.append(t)
 
     def transform(self, target_frame, msg):
         frame_id = msg.header.frame_id
@@ -51,7 +51,7 @@ class tf_broadcaster:
 
     def pub(self):
         while not rospy.is_shutdown():
-            for f in self.frames:
+            for f in self.frame_list:
                 f.header.stamp = rospy.Time.now()
                 self.br.sendTransform(f)
                 self.rate.sleep()

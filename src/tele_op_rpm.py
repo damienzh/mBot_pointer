@@ -30,7 +30,7 @@ if __name__ == '__main__':
            "  space: stop\n" \
            "  Esc: exit\n" \
            "  Default speed 60 rpm\n"\
-           "  Max 180 rpm \n"\ 
+           "  Max 180 rpm \n" \
            "=======================================================\n"
     print info
     pub_rpm.publish(rpm)

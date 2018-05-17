@@ -7,6 +7,7 @@ from std_srvs.srv import Empty, EmptyResponse
 from geometry_msgs.msg import TransformStamped
 from move_base_msgs.msg import MoveBaseGoal, MoveBaseAction
 import actionlib
+import time
 import tf2_ros, tf
 from tf.transformations import quaternion_from_euler
 import numpy as np
@@ -40,6 +41,7 @@ class Detector:
         self.frame_pub = rospy.Publisher('add_frame', TransformStamped, queue_size=1)
 
         rospy.Service('/objectDetection', Empty, self.cvDetect)
+        rospy.loginfo('call service /objectDetection for object detection')
 
         if not self.test:
             self.moveClient = actionlib.SimpleActionClient('move_base', MoveBaseAction)
@@ -48,15 +50,24 @@ class Detector:
 
     def getData(self):
         if self.pcl_msg != None:
+            rospy.loginfo('import point cloud data')
+            start = rospy.Time.now().to_sec()
             self.pcl = self.convertPCL(self.pcl_msg)
+            end = rospy.Time.now().to_sec()
+            rospy.loginfo('time for convert pcl message to numpy array: {}s'.format(end-start))
 
+        self.depth_img = self.bridge.imgmsg_to_cv2(self.depth_img_msg, desired_encoding="passthrough")
+        self.color_img = self.bridge.imgmsg_to_cv2(self.color_img_msg, desired_encoding='bgr8')
         self.shape = self.depth_img.shape
 
+
     def rgb_callback(self, msg):
-        self.color_img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+        self.color_img_msg = msg
+
 
     def dep_callback(self, msg):
-        self.depth_img = self.bridge.imgmsg_to_cv2(msg, desired_encoding="passthrough")
+        self.depth_img_msg = msg
+
 
     def pcl_callback(self, msg):
         self.pcl_msg = msg
@@ -69,6 +80,7 @@ class Detector:
         return p.reshape(-1, 3)
 
     def cvDetect(self, req):
+        self.found_object = False
         rospy.loginfo('start get images')
         self.getData()
         rospy.loginfo('start detection')
@@ -96,11 +108,15 @@ class Detector:
             self.target_center = centerObj.center
 
             self.found_object = True
-            rospy.loginfo('selected object')
+            rospy.loginfo('selected object:{}'.format(self.target_label))
 
         if self.test:
             cv2.imshow('detected img', detcetedImg)
-            cv2.waitKey(0)
+            k = cv2.waitKey(0)
+            rospy.loginfo('press s to save the image')
+            if k == ord('s'):
+                cv2.imwrite('ObjectDetection{}.png'.format(time.strftime("%Y%m%d-%H%M%S")), detcetedImg)
+            cv2.destroyAllWindows()
 
         if self.found_object:
             rospy.loginfo('object found, getting coordinates')
