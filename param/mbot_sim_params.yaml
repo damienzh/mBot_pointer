@@ -1,0 +1,10 @@
+sim_camera:
+    rgb: /camera/rgb/image_raw
+    depth: /camera/depth/image_raw
+    pointcloud:
+
+sim_mbot:
+    odom:
+    imu:
+
+sim_control: 
